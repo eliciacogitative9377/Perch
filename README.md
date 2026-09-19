@@ -81,21 +81,35 @@ The menu bar status item shows running indicators next to each configured app:
 | `⌃Tab` | Cycle to the previously used app |
 | `⌃1` … `⌃9` | Jump directly to a pinned app (configured per-app) |
 
+Every shortcut — including the search panel's own keys, the per-module popup
+shortcuts and the Settings window — is listed in the
+**[User Manual](docs/USER_MANUAL.md)**.
+
 ---
 
 ## Installation
 
 ### Download
 
-Grab `Perch.dmg` from the [latest release](https://github.com/sagardn/Perch/releases/latest),
-open it and drag Perch to Applications.
-
-Releases are signed ad hoc rather than with a Developer ID, so the first launch
-needs one extra step — right-click Perch in Applications and choose **Open**, or:
+One line, no Gatekeeper prompt:
 
 ```bash
-xattr -dr com.apple.quarantine /Applications/Perch.app
+curl -fsSL https://github.com/sagardn/Perch/releases/latest/download/Perch.dmg -o /tmp/Perch.dmg \
+  && hdiutil attach /tmp/Perch.dmg -nobrowse -quiet \
+  && cp -R /Volumes/Perch/Perch.app /Applications/ \
+  && hdiutil detach /Volumes/Perch -quiet \
+  && xattr -dr com.apple.quarantine /Applications/Perch.app \
+  && open /Applications/Perch.app
 ```
+
+Quarantine is applied by the browser that downloads a file, not by the file
+itself, so fetching the DMG with `curl` sidesteps Gatekeeper completely.
+
+Prefer clicking? Grab `Perch.dmg` from the
+[latest release](https://github.com/sagardn/Perch/releases/latest) and drag
+Perch to Applications — then **right-click it and choose Open** the first time.
+Perch is signed ad hoc rather than with a paid Developer ID, so macOS wants
+that one confirmation before it will run a downloaded copy.
 
 ### Build from Source
 

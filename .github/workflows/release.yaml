@@ -80,18 +80,39 @@ jobs:
           body: |
             ## Install
 
-            Download `Perch.dmg`, open it, drag Perch to Applications.
+            Paste this in Terminal. It installs Perch and opens it, with no
+            Gatekeeper prompt — quarantine is applied by browsers, not by
+            `curl`, so downloading this way skips it entirely.
 
-            This build is signed ad hoc rather than with a Developer ID, so the
-            first launch needs one extra step: right-click Perch in
-            Applications and choose **Open**, or run
-
+            ```bash
+            curl -fsSL https://github.com/sagardn/Perch/releases/latest/download/Perch.dmg -o /tmp/Perch.dmg \
+              && hdiutil attach /tmp/Perch.dmg -nobrowse -quiet \
+              && cp -R /Volumes/Perch/Perch.app /Applications/ \
+              && hdiutil detach /Volumes/Perch -quiet \
+              && xattr -dr com.apple.quarantine /Applications/Perch.app \
+              && open /Applications/Perch.app
             ```
+
+            <details>
+            <summary>Or download the DMG by hand</summary>
+
+            Download `Perch.dmg` below, open it, drag Perch to Applications.
+            Because it arrived through a browser it is quarantined, and this
+            build is signed ad hoc rather than with a paid Developer ID — so
+            the first launch needs one step: **right-click Perch in
+            Applications and choose Open** (once), or run
+
+            ```bash
             xattr -dr com.apple.quarantine /Applications/Perch.app
             ```
 
-            Perch needs Accessibility (System Settings → Privacy & Security →
-            Accessibility) to move and minimise windows.
+            </details>
+
+            Perch then needs Accessibility (System Settings → Privacy &
+            Security → Accessibility) to move and minimise windows.
+
+            In-app updates are not affected by any of this: Perch downloads the
+            DMG itself, and files an app writes are not quarantined.
 
             ## Updating
 
