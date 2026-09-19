@@ -93,7 +93,7 @@ public class StatTileView: NSView {
 
             fill.leadingAnchor.constraint(equalTo: track.leadingAnchor),
             fill.topAnchor.constraint(equalTo: track.topAnchor),
-            fill.bottomAnchor.constraint(equalTo: track.bottomAnchor),
+            fill.bottomAnchor.constraint(equalTo: track.bottomAnchor)
         ])
 
         self.fillWidth = fill.widthAnchor.constraint(equalToConstant: 0)
@@ -177,7 +177,7 @@ public class StatPillView: NSView {
             pill.centerXAnchor.constraint(equalTo: centerXAnchor),
             pill.topAnchor.constraint(equalTo: captionField.bottomAnchor, constant: 8),
             pill.heightAnchor.constraint(equalToConstant: 24),
-            pill.widthAnchor.constraint(greaterThanOrEqualTo: pill.heightAnchor, multiplier: 2.4),
+            pill.widthAnchor.constraint(greaterThanOrEqualTo: pill.heightAnchor, multiplier: 2.4)
         ])
     }
 

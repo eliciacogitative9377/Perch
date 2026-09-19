@@ -209,7 +209,12 @@ func write(_ size: CGFloat, to path: String) {
         FileHandle.standardError.write("failed to render \(path)\n".data(using: .utf8)!)
         exit(1)
     }
-    try! png.write(to: URL(fileURLWithPath: path))
+    do {
+        try png.write(to: URL(fileURLWithPath: path))
+    } catch {
+        FileHandle.standardError.write("failed to write \(path): \(error)\n".data(using: .utf8)!)
+        exit(1)
+    }
 }
 
 // MARK: - write both sets
@@ -225,7 +230,12 @@ let fm = FileManager.default
 // 1. the standalone launcher's iconset, which build.sh feeds to iconutil
 let iconset = root.appendingPathComponent("launcher/Perch.iconset").path
 try? fm.removeItem(atPath: iconset)
-try! fm.createDirectory(atPath: iconset, withIntermediateDirectories: true)
+do {
+    try fm.createDirectory(atPath: iconset, withIntermediateDirectories: true)
+} catch {
+    FileHandle.standardError.write("failed to create \(iconset): \(error)\n".data(using: .utf8)!)
+    exit(1)
+}
 
 let iconsetVariants: [(String, CGFloat)] = [
     ("icon_16x16.png", 16),        ("icon_16x16@2x.png", 32),

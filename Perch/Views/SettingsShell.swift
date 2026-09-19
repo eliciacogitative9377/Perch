@@ -206,7 +206,7 @@ private struct HostedView: NSViewRepresentable {
             view.leadingAnchor.constraint(equalTo: container.leadingAnchor),
             view.trailingAnchor.constraint(equalTo: container.trailingAnchor),
             view.topAnchor.constraint(equalTo: container.topAnchor),
-            view.bottomAnchor.constraint(equalTo: container.bottomAnchor),
+            view.bottomAnchor.constraint(equalTo: container.bottomAnchor)
         ])
     }
 }
@@ -357,7 +357,9 @@ struct SettingsShellView: View {
             if let module = model.selectedModule, module.config.hasPreview {
                 // An icon, not the word "Preview": it sits beside the enable
                 // switch, and a toolbar full of prose reads as a form.
-                Button(action: { model.togglePreview() }) {
+                Button {
+                    model.togglePreview()
+                } label: {
                     Image(systemName: "eye")
                 }
                 .help(localizedString("Preview"))

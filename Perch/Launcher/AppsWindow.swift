@@ -81,7 +81,7 @@ final class AppsWindow: NSWindowController, NSTableViewDataSource, NSTableViewDe
 
             hint.leadingAnchor.constraint(equalTo: remove.trailingAnchor, constant: 12),
             hint.centerYAnchor.constraint(equalTo: add.centerYAnchor),
-            hint.trailingAnchor.constraint(lessThanOrEqualTo: content.trailingAnchor, constant: -12),
+            hint.trailingAnchor.constraint(lessThanOrEqualTo: content.trailingAnchor, constant: -12)
         ])
     }
 
@@ -137,7 +137,7 @@ final class AppsWindow: NSWindowController, NSTableViewDataSource, NSTableViewDe
             shortcut.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -6),
             shortcut.centerYAnchor.constraint(equalTo: container.centerYAnchor),
             shortcut.widthAnchor.constraint(equalToConstant: 40),
-            name.trailingAnchor.constraint(lessThanOrEqualTo: shortcut.leadingAnchor, constant: -8),
+            name.trailingAnchor.constraint(lessThanOrEqualTo: shortcut.leadingAnchor, constant: -8)
         ])
         return container
     }

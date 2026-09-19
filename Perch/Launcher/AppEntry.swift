@@ -28,6 +28,10 @@ enum Config {
 
     static let fileURL = directory.appendingPathComponent("apps.json")
 
+    // swiftlint:disable comma
+    // The columns are padded on purpose: nineteen rows of name, bundle id and
+    // shortcut are read down the column, not across the line, and the comma
+    // rule would collapse them into a wall of text.
     static let defaults: [AppEntry] = [
         AppEntry(name: "Finder",             bundleID: "com.apple.finder",             shortcut: "1"),
         AppEntry(name: "Launchpad (Apps)",   bundleID: "com.apple.apps.launcher", launchOnly: true, pinned: true),
@@ -49,6 +53,7 @@ enum Config {
         AppEntry(name: "Terminal",           bundleID: "com.apple.Terminal",           shortcut: "8"),
         AppEntry(name: "System Settings",    bundleID: "com.apple.systempreferences",  shortcut: "9"),
     ]
+    // swiftlint:enable comma
 
     /// Reads the list, writing the default file the first time.
     static func load() -> [AppEntry] {
