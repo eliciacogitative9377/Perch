@@ -30,11 +30,21 @@ jobs:
       - name: Check the tag matches the project version
         run: |
           TAG="${GITHUB_REF_NAME#v}"
-          VERSION=$(grep -m1 -o 'MARKETING_VERSION = [0-9.]*' Perch.xcodeproj/project.pbxproj | head -1 | awk '{print $3}')
-          echo "tag=$TAG project=$VERSION"
-          # A mismatch ships a release the updater can never offer, so stop here.
+          # Ask xcodebuild, do not grep the project file: project.pbxproj holds a
+          # MARKETING_VERSION per target (the helper, the widget, the modules),
+          # so the first match belongs to whichever target happens to be listed
+          # first -- which is how the v1.0.0 run failed this check while the app
+          # itself was correctly at 1.0.0.
+          VERSION=$(xcodebuild -project Perch.xcodeproj -scheme Perch \
+            -configuration Release -showBuildSettings 2>/dev/null \
+            | awk '/ MARKETING_VERSION = /{print $3; exit}')
+          echo "tag=$TAG app=$VERSION"
+          if [ -z "$VERSION" ]; then
+            echo "::error::Could not read MARKETING_VERSION from the Perch scheme"
+            exit 1
+          fi
           if [ "$TAG" != "$VERSION" ]; then
-            echo "::error::Tag v$TAG does not match MARKETING_VERSION $VERSION"
+            echo "::error::Tag v$TAG does not match the app's version $VERSION"
             exit 1
           fi
 
