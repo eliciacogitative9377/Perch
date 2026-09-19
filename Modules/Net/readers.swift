@@ -559,32 +559,39 @@ internal class UsageReader: Reader<Network_Usage>, CWEventDelegate {
     private func getPublicIP() {
         guard self.publicIPState else { return }
         
+        // echoip's shape: one address per request (the family is forced with
+        // curl's -4/-6) plus the two-letter country, which is what draws the
+        // flag next to the address.
         struct Addr_s: Decodable {
-            let ipv4: String?
-            let ipv6: String?
-            let country: String?
+            let ip: String?
+            let countryCode: String?
+            
+            enum CodingKeys: String, CodingKey {
+                case ip
+                case countryCode = "country_iso"
+            }
         }
         
         DispatchQueue.global(qos: .userInitiated).async {
-            let response = syncShell("curl -s -4 \(Branding.publicIPv4)")
+            let response = syncShell("curl -s -4 --max-time 8 \(Branding.publicIPv4)")
             if !response.isEmpty, let data = response.data(using: .utf8),
                let addr = try? JSONDecoder().decode(Addr_s.self, from: data) {
-                if let ip = addr.ipv4, self.isIPv4(ip) {
+                if let ip = addr.ip, self.isIPv4(ip) {
                     self.usage.raddr.v4 = ip
                 }
-                if let countryCode = addr.country {
+                if let countryCode = addr.countryCode {
                     self.usage.raddr.countryCode = countryCode
                 }
             }
         }
         DispatchQueue.global(qos: .userInitiated).async {
-            let response = syncShell("curl -s -6 \(Branding.publicIPv6)")
+            let response = syncShell("curl -s -6 --max-time 8 \(Branding.publicIPv6)")
             if !response.isEmpty, let data = response.data(using: .utf8),
                let addr = try? JSONDecoder().decode(Addr_s.self, from: data) {
-                if let ip = addr.ipv6, !self.isIPv4(ip) {
+                if let ip = addr.ip, !self.isIPv4(ip) {
                     self.usage.raddr.v6 = ip
                 }
-                if let countryCode = addr.country {
+                if let countryCode = addr.countryCode {
                     self.usage.raddr.countryCode = countryCode
                 }
             }

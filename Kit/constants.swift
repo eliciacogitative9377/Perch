@@ -169,6 +169,11 @@ public enum Branding {
     /// self-hostable -- so if you would rather not depend on someone else's
     /// server at all, run echoip and point these at it. The caller forces the
     /// address family with curl's -4/-6, which is why one path serves both.
-    public static let publicIPv4 = "https://ifconfig.co/ip"
-    public static let publicIPv6 = "https://ifconfig.co/ip"
+    ///
+    /// /json, not /ip: the caller decodes a JSON object and wants the country
+    /// alongside the address, for the flag beside it. Pointing this at /ip
+    /// returned a bare string, the decode failed silently, and the Public IP
+    /// row simply never appeared.
+    public static let publicIPv4 = "https://ifconfig.co/json"
+    public static let publicIPv6 = "https://ifconfig.co/json"
 }

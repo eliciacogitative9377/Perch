@@ -269,10 +269,10 @@ two kinds of outbound request, both of which you can turn off:
   check, once per day. Set *Check for updates* to **Never** in Settings and it
   is never contacted. Nothing about your machine is sent; it is a plain read of
   the public releases endpoint.
-- **`https://ifconfig.co/ip`** — your public IP, shown in the Network popup, and
-  only fetched while that popup is open. The service runs
-  [echoip](https://github.com/mpolden/echoip) (MIT, self-hostable), so you can
-  point it at your own instance.
+- **`https://ifconfig.co/json`** — your public IP and its country (for the flag
+  beside it), shown in the Network popup and only fetched while that popup is
+  open. The service runs [echoip](https://github.com/mpolden/echoip) (MIT,
+  self-hostable), so you can point it at your own instance.
 
 The Network module's connectivity check pings a host of your choosing
 (`google.com` by default, configurable in that module's settings) when
