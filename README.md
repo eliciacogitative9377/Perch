@@ -1,162 +1,270 @@
-# Perch
+<p align="center">
+  <img src="Perch/Supporting%20Files/Assets.xcassets/AppIcon.appiconset/icon_256x256.png" width="120" alt="Perch icon">
+</p>
 
-<p align="center"><img src="Perch/Supporting%20Files/Assets.xcassets/AppIcon.appiconset/icon_256x256.png" width="120"></p>
+<h1 align="center">Perch</h1>
 
-macOS system monitor in your menu bar
+<p align="center">
+  A native macOS menu bar app launcher, window switcher, and system monitor — all in one.
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/macOS-12%2B-blue?style=flat-square&logo=apple" alt="macOS 12+">
+  <img src="https://img.shields.io/badge/Swift-5.9-orange?style=flat-square&logo=swift" alt="Swift">
+  <img src="https://img.shields.io/badge/License-MIT-green?style=flat-square" alt="MIT License">
+  <img src="https://img.shields.io/badge/Release-1.0-purple?style=flat-square" alt="Release 1.0">
+  <img src="https://img.shields.io/badge/No%20Telemetry-✓-brightgreen?style=flat-square" alt="No Telemetry">
+</p>
+
+---
+
+## What is Perch?
+
+**Perch** is a lightweight, native macOS app that lives entirely in your menu bar. It combines two things:
+
+- 🚀 **App Launcher & Window Switcher** — a curated list of your apps, accessible via a Spotlight-style search panel or a single hotkey. Perch shows each app's real icon, a running indicator, and does the right thing on click — launch, focus, minimise, or restore.
+- 📊 **System Monitor** — live CPU, RAM, disk, network, and temperature readings drawn directly in the menu bar, with a mini graph popup on click (styled like Stats).
+
+No Dock clutter. No separate apps. Just one **`Apps ▾`** item in the menu bar.
+
+---
+
+## Features
+
+### App Launcher
+| App state | Click does |
+|---|---|
+| Not running | Launch it |
+| Running, window behind | Bring it to front |
+| Running and frontmost | Minimise it |
+| Minimised or hidden | Restore + focus |
+| Full screen | Shows a notice (macOS limitation) |
+| Menu-bar-only app | Activate it |
+
+- **Spotlight-style search panel** — `⌃Space` opens a floating search panel at the pointer. Type to fuzzy-filter, press Return or click to switch.
+- **MRU ordering** — recently used apps float to the top automatically.
+- **Trackpad gesture** — configurable multi-finger tap opens the search panel (default: two-finger double tap).
+- **Per-app hotkeys** — assign `⌃1` … `⌃9` shortcuts to jump to specific apps instantly.
+- **`⌃Tab` app cycle** — walks through recently used apps one step at a time (can be turned off if it conflicts with your browser/terminal).
+- **`⌃\`` toggle** — minimises the frontmost app; press again to restore it.
+
+### System Monitor
+Live readings drawn as compact widgets in the menu bar itself:
+
+| Widget | What it shows |
+|---|---|
+| **CPU** | usage % |
+| **RAM** | usage % |
+| **Disk** | read/write speed |
+| **Network** | ↑↓ throughput |
+| **Temperature** | CPU die temp |
+
+Click any widget in the menu to see a scrolling chart and detailed breakdown.
+
+### Menu Bar Indicators
+The menu bar status item shows running indicators next to each configured app:
+
+```
+●  Google Chrome      running, window on screen
+○  Reminders          running, but minimised/hidden
+   Firefox            not running
+```
+
+---
+
+## Keyboard Shortcuts
+
+| Shortcut | Action |
+|---|---|
+| `⌃Space` | Open / close the search panel |
+| `⌃`` ` `` ` | Minimise frontmost app (press again to restore) |
+| `⌃Tab` | Cycle to the previously used app |
+| `⌃1` … `⌃9` | Jump directly to a pinned app (configured per-app) |
+
+---
 
 ## Installation
-### Manual
-Build it from source (see [Build](#build)), then move `Perch.app` to your Applications folder.
 
-There is no download or Homebrew formula: `brew install stats` installs the
-upstream app, not this fork.
+### Build from Source
+
+Requires **Xcode** (or Xcode Command Line Tools for the launcher only).
+
+```bash
+# Clone the repo
+git clone https://github.com/sagardn/Perch.git
+cd Perch
+
+# Build with Xcode
+open Perch.xcodeproj
+# Product → Archive → Distribute App → Copy App
+```
+
+Move `Perch.app` to your `/Applications` folder and launch it.
+
+> **Note:** There is no Homebrew formula or pre-built download yet. `brew install stats` installs the upstream app, not this fork.
+
+### Launcher only (no Xcode needed)
+
+The `launcher/` subdirectory is a standalone Swift Package that needs only the Command Line Tools:
+
+```bash
+cd launcher
+swift build -c release
+cp .build/release/Perch /usr/local/bin/perch
+```
 
 ### Uninstall
-Run the uninstall script bundled with the app (requires administrator privileges to remove the SMC helper):
+
 ```bash
 sh /Applications/Perch.app/Contents/Resources/Scripts/uninstall.sh
 ```
-The script quits Perch and removes:
 
-   - the SMC helper (`/Library/LaunchDaemons/com.sagar.perch.SMC.Helper.plist` and `/Library/PrivilegedHelperTools/com.sagar.perch.SMC.Helper`)
-   - `Perch.app`
-   - application data and preferences (`~/Library/Application Support/Perch`, widget containers, and `com.sagar.perch` defaults)
+This quits Perch and removes:
+- The SMC helper (`/Library/LaunchDaemons/com.sagar.perch.SMC.Helper.plist` and `/Library/PrivilegedHelperTools/com.sagar.perch.SMC.Helper`)
+- `Perch.app`
+- Application data (`~/Library/Application Support/Perch`, widget containers, and `com.sagar.perch` defaults)
 
-If the app has already been moved to the Trash, the script can be run directly from the repository:
+If the app is already in the Trash, run it from the repo directly:
 ```bash
 sh Kit/scripts/uninstall.sh
 ```
 
+---
+
 ## Requirements
-Perch is supported on macOS 12 (Monterey) and newer.
-Beta versions of macOS are not supported - only stable releases.
 
-## Features
-Perch is an application that allows you to monitor your macOS system.
+- **macOS 12 Monterey** or newer
+- Only stable macOS releases are supported (not betas)
+- **Accessibility permission** is required for window switching (Perch will prompt on first launch)
 
- - CPU utilization
- - GPU utilization
- - Memory usage
- - Disk utilization
- - Network usage
- - Battery level
- - Fan's control (not maintained)
- - Sensors information (Temperature/Voltage/Power)
- - Bluetooth devices
- - Multiple time zone clock
+---
+
+## Configuration
+
+Apps are stored in a JSON config file. The easiest way to add an app is:
+
+1. Switch to the app you want to add
+2. Click **`Apps ▾`** in the menu bar
+3. Click **"Add [App Name]"** — it appears automatically when you have an unlisted app in front
+
+To assign a `⌃N` hotkey or set a custom name, edit the config file directly:
+
+```
+~/Library/Application Support/Perch/apps.json
+```
+
+```json
+[
+  { "name": "Chrome",   "bundleID": "com.google.Chrome",         "shortcut": "1" },
+  { "name": "Terminal", "bundleID": "com.apple.Terminal",        "shortcut": "2" },
+  { "name": "Slack",    "bundleID": "com.tinyspeck.slackmacgap", "shortcut": "3" }
+]
+```
+
+---
+
+## Settings
+
+Access settings from the **`Apps ▾`** menu → **Settings**.
+
+| Setting | Default | Description |
+|---|---|---|
+| Search opens at pointer | On | Panel appears under the mouse cursor |
+| Trackpad gesture | On (2-finger double-tap) | Gesture to open the search panel |
+| Hide on outside click | On | Dismiss the panel when you click elsewhere |
+| Ctrl+Tab cycle | On | Walk through recent apps with ⌃Tab |
+| System monitor | On | Sample CPU/RAM/network on a timer |
+| Menu bar widgets | CPU + RAM | Which readings appear in the status item |
+
+---
+
+## Privacy
+
+Perch makes **no network requests** except one optional lookup:
+
+- **`https://ifconfig.co/ip`** — fetches your public IP, shown in the Network popup when you open it. This is the only outbound call Perch ever makes, and it only fires when you open that popup. The service runs [echoip](https://github.com/mpolden/echoip) (MIT licensed, self-hostable).
+
+Update checks are **disabled** in this fork. No analytics, no telemetry, no crash reporting.
+
+---
 
 ## FAQs
 
-### How do you change the order of the menu bar icons?
-macOS decides the order of the menu bar items not `Perch` - it may change after the first reboot after installing Perch.
+<details>
+<summary><strong>How do I change the order of menu bar icons?</strong></summary>
 
-To change the order of any menu bar icon - macOS Mojave (version 10.14) and up.
+macOS controls the order, not Perch. To rearrange: hold `⌘` and drag the icon to the position you want.
 
-1. Hold down ⌘ (command key).
-2. Drag the icon to the desired position on the menu bar.
-3. Release ⌘ (command key)
+</details>
 
-### Perch icons do not appear in the menu bar
-macOS 26 introduced a new privacy control under System Settings → Menu Bar. Apps must be explicitly allowed there to display menu bar items. If Perch is running with at least one module active and one widget enabled, but none of its icons show up in the menu bar, this is almost certainly the cause.
+<details>
+<summary><strong>Perch icons don't appear in the menu bar</strong></summary>
 
-**Solution:** open **System Settings → Menu Bar** and toggle **Perch** ON.
+macOS 26 introduced a privacy control under **System Settings → Menu Bar**. Toggle **Perch** ON there.
 
-### Desktop widgets not showing the data
-Due to a problem with high data load in the system process (`chronod`) responsible for communication between the app and widgets, communication is disabled by default on the Perch side. To enable it, the `macOS widgets` option must be enabled in the Perch settings.
+</details>
 
-**Solution:** open **Perch Settings** and toggle **macOS widgets** ON.
+<details>
+<summary><strong>How do I reduce Perch's CPU or energy impact?</strong></summary>
 
-### How to reduce energy impact or CPU usage of Perch?
-Perch tries to be efficient as it's possible. But reading some data periodically is not a cheap task. Each module has its own "price". So, if you want to reduce energy impact from the Perch you need to disable some Perch modules. The most inefficient modules are Sensors and Bluetooth. Disabling these modules could reduce CPU usage and power efficiency by up to 50% in some cases.
+Disable the system monitor modules you don't need. Sensors and Bluetooth are the most expensive. Disabling them can cut CPU usage by up to 50%.
 
-### Fan control
-Fan control is in legacy mode. It does not receive any updates or fixes. It's not dropped from the app just because in the old Macs it works pretty acceptable. I'm open to accepting fixed or improvements (via PR) for this feature in case someone would like to help with that. But have no option and time to provide support for this feature.
+</details>
 
-### Sensors show incorrect CPU/GPU core count
-CPU/GPU sensors are simply thermal zones (sensors) on the CPU/GPU. They have no relation to the number of cores or specific cores.
-For example, a CPU is typically divided into two clusters: efficiency and performance. Each cluster contains multiple temperature sensors, and Perch simply displays these sensors. However, "CPU Efficient Core 1" does not represent the temperature of a single efficient core—it only indicates one of the temperature sensors within the efficiency core cluster.
-Additionally, with each new SoC, Apple changes the sensor keys. As a result, it takes time to determine which SMC values correspond to the appropriate sensors. If anyone knows how to accurately match the sensors for Apple Silicon, please contact me.
+<details>
+<summary><strong>Desktop widgets not showing data</strong></summary>
 
-### App crash – what to do?
-First, ensure that you are using the latest version of Perch. There is a high chance that a fix preventing the crash has already been released. If you are already running the latest version, check the open issues. Only if none of the existing issues address your problem should you open a new issue.
+Enable **macOS widgets** in Perch Settings. It's off by default to avoid overloading `chronod`.
 
-### Why my issue was closed without any response?
-Most probably because it's a duplicated issue and there is an answer to the question, report, or proposition. Please use a search by closed issues to get an answer.
-So, if your issue was closed without any response, most probably it already has a response.
+</details>
 
-### External API
-Perch does not collect any telemetry or analytics. The only external requests it makes are to the following APIs:
+<details>
+<summary><strong>Sensors show incorrect CPU/GPU core count</strong></summary>
 
-- https://ifconfig.co/ip – For retrieving the public IP address, shown in the Network popup
+Sensor names are thermal zones, not individual cores. Apple changes SMC keys with each SoC. "CPU Efficient Core 1" means one sensor in the efficiency cluster, not a specific core.
 
-Update checks are disabled in this fork: the updater replaces the running app
-with whatever it downloads, so it stays pointed at nothing until it has a
-release feed of its own (see `Branding` in `Kit/constants.swift`).
+</details>
 
-The IP lookup runs [echoip](https://github.com/mpolden/echoip), which is MIT
-licensed and self-hostable — run your own and repoint `Branding.publicIPv4` /
-`publicIPv6` if you would rather not depend on a third party. The request is
-only made when the Network popup asks for it.
+---
 
-If you have concerns about these requests, you have a few options:
+## Project Structure
 
-- propose a PR that allows these features to work without an external server
-- block both of these servers using any network filtering app (if you're reading this, you're likely using something like Little Snitch, so you can easily do this). In this case do not expect to receive any updates or see your public IP in the network module.
+```
+Perch/
+├── Perch/              # Main app target (SwiftUI settings, setup, views)
+├── Kit/                # Shared framework: widgets, types, helpers
+├── Modules/            # System monitor modules: CPU, RAM, Disk, Net, GPU, Battery, Sensors…
+├── launcher/           # Standalone Swift Package: menu bar launcher + window switcher
+│   └── Sources/Perch/
+│       ├── SearchPanel.swift     # Spotlight-style search panel
+│       ├── SystemPanel.swift     # Live system stats popup
+│       ├── WindowControl.swift   # Accessibility-based window management
+│       ├── Gesture.swift         # Trackpad gesture recognition
+│       └── Recents.swift         # MRU app ordering
+├── SMC/                # Privileged helper for SMC sensor access
+├── Widgets/            # macOS desktop widget extension
+└── Makefile            # Build, notarise, sign, package
+```
 
-### How to contribute to the project?
-If you want to develop a new feature, or you've found something that doesn't work, the first step is to open an issue so the feature or problem can be discussed. Pull requests should only be opened for existing issues and after discussion; otherwise, they may be closed automatically. There are a few cases where this can be skipped: language changes, and contributors who have already made significant contributions and whose implementations align well with the project.
+---
 
-## Open source, but not open contribution
-Perch is an open-source project: the full source code is available under the MIT license, and you are free to read it, learn from it, fork it, and build your own version of the app.
+## Open Source, Not Open Contribution
 
-However, it is not an open-contribution project. Perch is developed and maintained by a single person, and keeping the project stable and coherent takes priority over accepting every proposed change. Reviewing external code, testing it across different Macs and macOS versions, and maintaining it afterward often takes more time than writing it in the first place.
+Perch is open source under the MIT license — you are free to read it, learn from it, fork it, and build your own version.
 
-For that reason, unsolicited pull requests are generally not accepted and may be closed without review. If you want to change or add something, please open an issue first so it can be discussed. The exceptions are translations and language fixes, which are always welcome, and contributions from people who have already made significant contributions to the project.
+It is **not** an open-contribution project. Unsolicited pull requests may be closed without review. If you want to change or add something, please open an issue first. Translations and language fixes are always welcome.
 
-The best ways to support the project are reporting bugs, improving translations, and proposing ideas through issues.
+The best ways to support the project: report bugs, improve translations, and propose ideas through issues.
 
-## Supported languages
-- English
-- Polski
-- Українська
-- Русский
-- 中文 (简体) (thanks to [chenguokai](https://github.com/chenguokai), [Tai-Zhou](https://github.com/Tai-Zhou), and [Jerry](https://github.com/Jerry23011))
-- Türkçe (thanks to [yusufozgul](https://github.com/yusufozgul) and [setanarut](https://github.com/setanarut))
-- 한국어 (thanks to [escapeanaemia](https://github.com/escapeanaemia) and [iamhslee](https://github.com/iamhslee))
-- German (thanks to [natterstefan](https://github.com/natterstefan) and [aneitel](https://github.com/aneitel))
-- 中文 (繁體) (thanks to [iamch15542](https://github.com/iamch15542) and [jrthsr700tmax](https://github.com/jrthsr700tmax))
-- Spanish (thanks to [jcconca](https://github.com/jcconca))
-- Vietnamese (thanks to [HXD.VN](https://github.com/xuandung38))
-- French (thanks to [RomainLt](https://github.com/RomainLt))
-- Italian (thanks to [gmcinalli](https://github.com/gmcinalli))
-- Portuguese (Brazil) (thanks to [marcelochaves95](https://github.com/marcelochaves95) and [pedroserigatto](https://github.com/pedroserigatto))
-- Norwegian Bokmål (thanks to [rubjo](https://github.com/rubjo))
-- 日本語 (thanks to [treastrain](https://github.com/treastrain))
-- Portuguese (Portugal) (thanks to [AdamModus](https://github.com/AdamModus))
-- Czech (thanks to [mpl75](https://github.com/mpl75))
-- Magyar (thanks to [moriczr](https://github.com/moriczr))
-- Bulgarian (thanks to [zbrox](https://github.com/zbrox))
-- Romanian (thanks to [razluta](https://github.com/razluta))
-- Dutch (thanks to [ngohungphuc](https://github.com/ngohungphuc))
-- Hrvatski (thanks to [milotype](https://github.com/milotype))
-- Danish (thanks to [casperes1996](https://github.com/casperes1996) and [aleksanderbl29](https://github.com/aleksanderbl29))
-- Catalan (thanks to [davidalonso](https://github.com/davidalonso))
-- Indonesian (thanks to [yooody](https://github.com/yooody))
-- Hebrew (thanks to [BadSugar](https://github.com/BadSugar))
-- Slovenian (thanks to [zigapovhe](https://github.com/zigapovhe))
-- Greek (thanks to [sudoxcess](https://github.com/sudoxcess) and [vaionicle](https://github.com/vaionicle))
-- Persian (thanks to [ShawnAlisson](https://github.com/ShawnAlisson))
-- Slovenský (thanks to [martinbernat](https://github.com/martinbernat))
-- Thai (thanks to [apiphoomchu](https://github.com/apiphoomchu))
-- Estonian (thanks to [postylem](https://github.com/postylem))
-- Hindi (thanks to [patiljignesh](https://github.com/patiljignesh))
-- Finnish (thanks to [eightscrow](https://github.com/eightscrow))
-- Bengali (thanks to [adnan29979](https://github.com/adnan29979))
-- Tamil (thanks to [sabapathy7](https://github.com/sabapathy7))
-
-You can help by adding a new language or improving the existing translation.
+---
 
 ## License
-[MIT License](LICENSE). Perch is a fork; the upstream copyright notices are
-retained in the source headers and the attribution is recorded in
-[NOTICE.md](NOTICE.md), as the licence requires.
+
+[MIT License](LICENSE)
+
+```
+Copyright (c) 2019 Serhiy Mytrovtsiy (Stats, the work this is derived from)
+Copyright (c) 2026 Sagar (Perch, modifications)
+```
+
+Perch is a fork of [Stats](https://github.com/exelban/stats). Upstream copyright notices are retained in source headers. Full attribution is in [NOTICE.md](NOTICE.md).
