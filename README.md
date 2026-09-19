@@ -292,20 +292,38 @@ Sensor names are thermal zones, not individual cores. Apple changes SMC keys wit
 
 ```
 Perch/
-├── Perch/              # Main app target (SwiftUI settings, setup, views)
-├── Kit/                # Shared framework: widgets, types, helpers
-├── Modules/            # System monitor modules: CPU, RAM, Disk, Net, GPU, Battery, Sensors…
-├── launcher/           # Standalone Swift Package: menu bar launcher + window switcher
-│   └── Sources/Perch/
-│       ├── SearchPanel.swift     # Spotlight-style search panel
-│       ├── SystemPanel.swift     # Live system stats popup
-│       ├── WindowControl.swift   # Accessibility-based window management
-│       ├── Gesture.swift         # Trackpad gesture recognition
-│       └── Recents.swift         # MRU app ordering
-├── SMC/                # Privileged helper for SMC sensor access
-├── Widgets/            # macOS desktop widget extension
-└── Makefile            # Build, notarise, sign, package
+├── Perch/                      # the app itself
+│   ├── AppDelegate.swift       # module list, launcher start-up, updater
+│   ├── Launcher/               # the app-switcher half
+│   │   ├── SearchPanel.swift   # Ctrl+Space panel: search, arrow menu, right-click
+│   │   ├── WindowControl.swift # Accessibility: raise, minimise, new window
+│   │   ├── Recents.swift       # most-recently-used ordering
+│   │   ├── Hotkey.swift        # Carbon hotkeys (Ctrl+Space, Ctrl+1-9, Ctrl+`)
+│   │   ├── Gesture.swift       # trackpad taps via MultitouchSupport
+│   │   └── AppEntry.swift      # apps.json, the configured list
+│   ├── Views/                  # SettingsShell (SwiftUI), Dashboard, AppSettings
+│   └── Supporting Files/       # Info.plist, entitlements, 45 translations
+├── Kit/                        # shared framework
+│   ├── constants.swift         # Branding: links, feed, updates - and the palette
+│   ├── helpers.swift           # popup rows, markers, the intensity ramp
+│   ├── module/                 # popup, window, widget and portal plumbing
+│   └── Widgets/                # menu bar widget renderers, StatTile
+├── Modules/<Name>/             # one folder per metric: CPU, GPU, RAM, Disk,
+│                               # Net, Battery, Sensors, Bluetooth, Clock, Remote
+│                               # each with reader, popup, portal, widget, settings
+├── Widgets/                    # macOS desktop widget extension (needs macOS 14)
+├── SMC/                        # privileged helper for SMC sensor access
+├── launcher/                   # Command-Line-Tools-only build of the launcher
+├── docs/USER_MANUAL.md         # the long-form manual
+├── .github/workflows/          # build, release on a v* tag, linter, i18n
+├── Makefile                    # local archive, notarise, sign, DMG
+└── NOTICE.md                   # what this forked, and what was changed
 ```
+
+A metric is drawn in **four** independent places — the menu bar widget, the
+popup, the dashboard portal and the module's settings page. Changing a colour or
+a marker in one leaves the other three alone; that is the single most common
+surprise in this codebase.
 
 ---
 
