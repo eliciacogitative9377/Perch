@@ -132,11 +132,26 @@ public enum Branding {
     ///    under any tag the comparison reads as newer would overwrite the app
     ///    with no prompt. Turn this on deliberately, once the feed is yours
     ///    and the version numbering is yours.
-    public static let updatesEnabled = false
+    public static let updatesEnabled = true
+
+    /// The release feed: GitHub's own latest-release endpoint.
+    ///
+    /// The updater wants a release whose assets include one named exactly
+    /// "Perch.dmg" and whose tag it can compare against the bundle version, so
+    /// tag releases v1.0.1, v1.1.0 and so on -- isNewestVersion strips the v.
+    public static var releaseFeed: String {
+        "https://api.github.com/repos/\(repository)/releases/latest"
+    }
 
     /// What the update-interval setting defaults to.
+    ///
+    /// Deliberately not "Silent". In this codebase Silent does not mean "check
+    /// quietly" -- it downloads the release and calls install(), replacing the
+    /// running application with no prompt. A daily check that tells you and
+    /// waits is the honest default; Silent stays available for anyone who
+    /// wants it.
     public static var defaultUpdateInterval: String {
-        updatesEnabled ? "Silent" : "Never"
+        updatesEnabled ? "Once per day" : "Never"
     }
 
     /// Ko-fi page for this fork. nil would hide the Donate button rather than

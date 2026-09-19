@@ -21,11 +21,11 @@ import GPU
 import Bluetooth
 import Remote
 
-// Pointed at nothing on purpose. updater.install() replaces the running app
-// with whatever it downloads, so an upstream feed here would reinstall the
-// original app over this fork. Repoint both at your own release feed -- see
-// Branding.repository -- before enabling updates again.
-let updater = Updater(github: Branding.repository, url: "https://updates.invalid/release/latest")
+// Both sources are this fork's own GitHub releases -- see Branding. The
+// updater tries the primary feed first and falls back to the GitHub API, which
+// here is the same endpoint, so a rate-limited or flaky response gets a second
+// attempt rather than a silent failure.
+let updater = Updater(github: Branding.repository, url: Branding.releaseFeed)
 var modules: [Module] = [
     CPU(),
     GPU(),

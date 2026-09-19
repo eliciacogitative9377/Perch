@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/macOS-12%2B-blue?style=flat-square&logo=apple" alt="macOS 12+">
+  <img src="https://img.shields.io/badge/macOS-14%2B-blue?style=flat-square&logo=apple" alt="macOS 14+">
   <img src="https://img.shields.io/badge/Swift-5.9-orange?style=flat-square&logo=swift" alt="Swift">
   <img src="https://img.shields.io/badge/License-MIT-green?style=flat-square" alt="MIT License">
   <img src="https://img.shields.io/badge/Release-1.0-purple?style=flat-square" alt="Release 1.0">
@@ -85,6 +85,18 @@ The menu bar status item shows running indicators next to each configured app:
 
 ## Installation
 
+### Download
+
+Grab `Perch.dmg` from the [latest release](https://github.com/sagardn/Perch/releases/latest),
+open it and drag Perch to Applications.
+
+Releases are signed ad hoc rather than with a Developer ID, so the first launch
+needs one extra step — right-click Perch in Applications and choose **Open**, or:
+
+```bash
+xattr -dr com.apple.quarantine /Applications/Perch.app
+```
+
 ### Build from Source
 
 Requires **Xcode** (or Xcode Command Line Tools for the launcher only).
@@ -101,7 +113,7 @@ open Perch.xcodeproj
 
 Move `Perch.app` to your `/Applications` folder and launch it.
 
-> **Note:** There is no Homebrew formula or pre-built download yet. `brew install stats` installs the upstream app, not this fork.
+> **Note:** There is no Homebrew formula. `brew install stats` installs the upstream app, not this fork.
 
 ### Launcher only (no Xcode needed)
 
@@ -131,9 +143,34 @@ sh Kit/scripts/uninstall.sh
 
 ---
 
+## Updates
+
+Perch checks its own GitHub releases once per day and tells you when one is
+newer. **Settings → Check for updates** changes the interval or turns it off.
+
+*Silent* is offered but does exactly what it says: it downloads the release and
+replaces the running app without asking. It is not the default for that reason.
+
+### Releasing
+
+Tag a version and CI does the rest:
+
+```bash
+# bump MARKETING_VERSION in Perch.xcodeproj first, then
+git tag v1.0.1
+git push origin v1.0.1
+```
+
+`.github/workflows/release.yaml` builds, packages `Perch.dmg` and publishes the
+release with generated notes. The tag must match `MARKETING_VERSION` — the
+workflow fails if it does not, because the updater compares the two and a
+mismatched release could never be offered.
+
+---
+
 ## Requirements
 
-- **macOS 12 Monterey** or newer
+- **macOS 14 Sonoma** or newer — the settings window uses `NavigationSplitView`, and the bundled widget extension requires 14
 - Only stable macOS releases are supported (not betas)
 - **Accessibility permission** is required for window switching (Perch will prompt on first launch)
 
@@ -180,11 +217,21 @@ Access settings from the **`Apps ▾`** menu → **Settings**.
 
 ## Privacy
 
-Perch makes **no network requests** except one optional lookup:
+No analytics, no telemetry, no crash reporting, no account. Perch makes exactly
+two kinds of outbound request, both of which you can turn off:
 
-- **`https://ifconfig.co/ip`** — fetches your public IP, shown in the Network popup when you open it. This is the only outbound call Perch ever makes, and it only fires when you open that popup. The service runs [echoip](https://github.com/mpolden/echoip) (MIT licensed, self-hostable).
+- **`https://api.github.com/repos/sagardn/Perch/releases/latest`** — the update
+  check, once per day. Set *Check for updates* to **Never** in Settings and it
+  is never contacted. Nothing about your machine is sent; it is a plain read of
+  the public releases endpoint.
+- **`https://ifconfig.co/ip`** — your public IP, shown in the Network popup, and
+  only fetched while that popup is open. The service runs
+  [echoip](https://github.com/mpolden/echoip) (MIT, self-hostable), so you can
+  point it at your own instance.
 
-Update checks are **disabled** in this fork. No analytics, no telemetry, no crash reporting.
+The Network module's connectivity check pings a host of your choosing
+(`google.com` by default, configurable in that module's settings) when
+connectivity history is enabled.
 
 ---
 
