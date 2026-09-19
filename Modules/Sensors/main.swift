@@ -104,6 +104,10 @@ public class Sensors: Module {
     private func usageCallback(_ raw: Sensors_List?) {
         guard let value = raw, self.enabled else { return }
         
+        // Cheap once the flag is set, and this is the first moment the sensor
+        // list is guaranteed to hold real readings.
+        self.enableDefaultSensor()
+        
         self.popupView.usageCallback(value.sensors)
         self.portalView.usageCallback(value.sensors)
         self.notificationsView.usageCallback(value.sensors)
@@ -171,14 +175,35 @@ public class Sensors: Module {
     private func enableDefaultSensor() {
         let flag = "\(self.config.name)_defaultSensorApplied"
         guard !Store.shared.exist(key: flag) else { return }
-        Store.shared.set(key: flag, value: true)
-        
-        guard let sensors = self.sensorsReader?.list.sensors else { return }
-        // Prefer an averaged CPU die reading over a single core, and fall back
-        // to proximity on Intel.
+
+        // Do not spend the one-shot before the sensors exist.
+        //
+        // This used to mark itself done and *then* look at the list. Detection
+        // is asynchronous, so on any Mac where the first read had not landed
+        // yet the list was empty, the flag was already set, and no temperature
+        // was ever enabled -- permanently, because the flag never clears. That
+        // is why it worked on some machines and not others. Called again from
+        // the reader callback, so whenever the list arrives, it is handled.
+        guard let sensors = self.sensorsReader?.list.sensors, !sensors.isEmpty else { return }
+
         let candidates = sensors.filter { $0.group == .CPU && $0.type == .temperature }
-        guard let sensor = candidates.first(where: { $0.average }) ?? candidates.first else { return }
-        
+        guard !candidates.isEmpty else {
+            // The list is populated and this Mac reports no CPU temperature.
+            // That is a definitive answer, so stop asking.
+            Store.shared.set(key: flag, value: true)
+            debug("Sensors: no CPU temperature sensor on this Mac")
+            return
+        }
+
+        // Prefer one that is actually reporting a reading: a key can be present
+        // and read zero, and enabling that shows an empty slot in the menu bar.
+        // Averaged die readings beat a single core; Intel falls back to
+        // proximity, which is all it exposes.
+        let reporting = candidates.filter { $0.value > 0 }
+        let sensor = reporting.first(where: { $0.average }) ?? reporting.first
+            ?? candidates.first(where: { $0.average }) ?? candidates[0]
+
+        Store.shared.set(key: flag, value: true)
         Store.shared.set(key: "sensor_\(sensor.key)", value: true)
         debug("Sensors: enabled \(sensor.key) (\(sensor.name)) in the menu bar by default")
     }
