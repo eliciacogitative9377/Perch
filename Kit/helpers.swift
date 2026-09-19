@@ -929,8 +929,17 @@ public extension NSColor {
         let quiet: NSColor = dark ? .black : .white
         let loud: NSColor = dark ? .white : .black
 
-        guard let idle = full.blended(withFraction: 0.45, of: quiet),
-              let peak = full.blended(withFraction: 0.30, of: loud) else { return full }
+        // Idle barely dims, and never goes dark.
+        //
+        // The first version blended 45% toward black at idle, which looked
+        // right on a chart surface and was close to invisible in the menu bar
+        // -- where the ground is whatever wallpaper happens to be behind it,
+        // and where idle is exactly when the reader most needs to see which
+        // arrow is which. A marker earns its place by being legible first and
+        // expressive second, so the ramp now runs from the full colour to a
+        // brighter one rather than from dark to full.
+        guard let idle = full.blended(withFraction: 0.08, of: quiet),
+              let peak = full.blended(withFraction: 0.45, of: loud) else { return full }
 
         if t <= 0.5 {
             return idle.blended(withFraction: t * 2, of: full) ?? full

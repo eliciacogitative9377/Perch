@@ -295,8 +295,11 @@ public class SpeedWidget: WidgetWrapper {
         let height = self.frame.height
         let size = height * 0.8
         let scaleFactor = NSScreen.main?.backingScaleFactor ?? 1
-        let lineWidth: CGFloat = 1
-        let arrowSize: CGFloat = 3 + (scaleFactor/2)
+        // Heavier than a hairline. These sit over whatever wallpaper is behind
+        // the menu bar at 8pt tall, where a 1px stroke with a 3pt head reads as
+        // a smudge -- and the arrow is the only thing carrying direction.
+        let lineWidth: CGFloat = 1.6
+        let arrowSize: CGFloat = 4 + (scaleFactor/2)
         let x = arrowSize + (lineWidth / 2)
         let y = (height - size)/2
         
@@ -320,6 +323,8 @@ public class SpeedWidget: WidgetWrapper {
         
         color.set()
         arrow.lineWidth = lineWidth
+        arrow.lineCapStyle = .round
+        arrow.lineJoinStyle = .round
         arrow.stroke()
         arrow.close()
         
@@ -428,8 +433,8 @@ public class SpeedWidget: WidgetWrapper {
         let arrowAngle = CGFloat(Double.pi / 5)
         let half = self.frame.size.height / 2
         let scaleFactor = NSScreen.main?.backingScaleFactor ?? 1
-        let lineWidth: CGFloat = 1
-        let arrowSize: CGFloat = 3 + (scaleFactor/2)
+        let lineWidth: CGFloat = 1.6
+        let arrowSize: CGFloat = 4 + (scaleFactor/2)
         var x = Constants.Widget.margin.x + arrowSize + (lineWidth / 2)
         if self.iconAlignmentState == "right" {
             x += (width-7)
@@ -451,6 +456,8 @@ public class SpeedWidget: WidgetWrapper {
         
         self.inputColor(self.iconColorState).set()
         inputArrow.lineWidth = lineWidth
+        inputArrow.lineCapStyle = .round
+        inputArrow.lineJoinStyle = .round
         inputArrow.stroke()
         inputArrow.close()
         
@@ -464,6 +471,8 @@ public class SpeedWidget: WidgetWrapper {
         
         self.outputColor(self.iconColorState).set()
         outputArrow.lineWidth = lineWidth
+        outputArrow.lineCapStyle = .round
+        outputArrow.lineJoinStyle = .round
         outputArrow.stroke()
         outputArrow.close()
     }
