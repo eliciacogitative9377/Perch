@@ -69,8 +69,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         warmTimer?.tolerance = 0.5
 
         if Prefs.cycleHotkeyEnabled {
-            cycleHotkey = Hotkey(keyCode: Hotkey.Key.tab, modifiers: .control) { [weak self] in
+            let cycle: () -> Void = { [weak self] in
                 Recents.shared.cycleToNext(among: self?.markedBundleIDs)
+            }
+            cycleHotkey = Hotkey(keyCode: Hotkey.Key.tab, modifiers: .control, action: cycle)
+
+            // ⌃Tab belongs to whichever app registered it first -- browsers and
+            // terminals want it too -- and the loser is told nothing. Fall back
+            // to ⌥Tab and say so, rather than a key that quietly does nothing.
+            if cycleHotkey == nil {
+                cycleHotkey = Hotkey(keyCode: Hotkey.Key.tab, modifiers: .option, action: cycle)
+                if cycleHotkey != nil {
+                    NSLog("Perch: ⌃Tab was already registered; using ⌥Tab for the app cycle")
+                    Notify.show("⌃Tab was taken — using ⌥Tab to cycle apps",
+                                symbol: "keyboard", for: 4)
+                } else {
+                    Notify.show("⌃Tab is taken by another app", symbol: "keyboard", for: 4)
+                }
             }
         }
 

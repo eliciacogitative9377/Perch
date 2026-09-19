@@ -54,6 +54,7 @@ No Dock clutter. No separate apps. Just one **`Apps ▾`** item in the menu bar.
 - **Trackpad gesture** — configurable multi-finger tap opens the search panel (default: two-finger double tap).
 - **Per-app hotkeys** — assign `⌃1` … `⌃9` shortcuts to jump to specific apps instantly.
 - **`⌃Tab` custom switcher** — right-click any result → **Add to ⌃Tab Switcher**, and `⌃Tab` then cycles *only* those apps, most recently used first. Mark the three or four you actually live in and the key stops walking through everything. Marked nothing? It falls back to recent apps, so the key never does nothing. (Can be turned off if it conflicts with your browser or terminal.)
+  - If another app already owns `⌃Tab`, macOS gives it to whoever registered first and tells the loser nothing. Perch notices, switches the cycle to **`⌥Tab`** and says so on launch.
 - **`⌃\`` toggle** — minimises the frontmost app; press again to restore it.
 
 <p align="center">

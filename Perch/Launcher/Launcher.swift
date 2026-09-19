@@ -43,9 +43,12 @@ final class Launcher {
                                       self?.setMarked(entry, marked)
                                   })
 
+        var taken: [String] = []
+
         searchHotkey = Hotkey(keyCode: Hotkey.Key.space, modifiers: .control) { [weak self] in
             self?.searchPanel?.toggle()
         }
+        if searchHotkey == nil { taken.append("⌃Space") }
         // Ctrl+Tab walks back through recently used apps, one press per step.
         // Note this takes Ctrl+Tab away from every app that uses it for tab
         // switching -- Chrome, Safari, terminals -- because a global hotkey
@@ -58,14 +61,30 @@ final class Launcher {
         warmTimer?.tolerance = 0.5
 
         if Prefs.cycleHotkeyEnabled {
-            cycleHotkey = Hotkey(keyCode: Hotkey.Key.tab, modifiers: .control) { [weak self] in
+            let cycle: () -> Void = { [weak self] in
                 Recents.shared.cycleToNext(among: self?.markedBundleIDs)
+            }
+            cycleHotkey = Hotkey(keyCode: Hotkey.Key.tab, modifiers: .control, action: cycle)
+
+            // ⌃Tab is popular: browsers, terminals and window managers all
+            // want it, and RegisterEventHotKey hands it to whoever asked
+            // first. When that happens the key used to do nothing at all, with
+            // the reason buried in the system log. Fall back to ⌥Tab and say
+            // so, rather than shipping a feature that silently is not there.
+            if cycleHotkey == nil {
+                cycleHotkey = Hotkey(keyCode: Hotkey.Key.tab, modifiers: .option, action: cycle)
+                if cycleHotkey != nil {
+                    self.cycleUsesOption = true
+                } else {
+                    taken.append("⌃Tab")
+                }
             }
         }
 
         minimizeHotkey = Hotkey(keyCode: Hotkey.Key.grave, modifiers: .control) { [weak self] in
             self?.toggleFrontmost()
         }
+        if minimizeHotkey == nil { taken.append("⌃`") }
         registerAppHotkeys()
 
         Gesture.shared.onTap = { [weak self] in self?.searchPanel?.toggle() }
@@ -73,11 +92,36 @@ final class Launcher {
             Gesture.shared.start(fingers: Prefs.gestureFingers, taps: Prefs.gestureTaps)
         }
 
+        self.reportHotkeys(taken: taken)
+
         // Raising a window needs no permission; minimizing one does.
         if !WindowControl.isTrusted {
             WindowControl.requestAccessibility()
             Notify.show("Perch needs Accessibility to move windows", symbol: "hand.raised.fill", for: 3)
         }
+    }
+
+    /// True when ⌃Tab was already taken and the cycle moved to ⌥Tab.
+    private var cycleUsesOption = false
+
+    /// Say which hotkeys another app already owns.
+    ///
+    /// A global hotkey belongs to whichever process registered it first, and
+    /// nothing tells the loser. Before this, a Mac where something else held
+    /// ⌃Space or ⌃Tab simply had a Perch that ignored those keys, which reads
+    /// as a broken app rather than as a collision.
+    private func reportHotkeys(taken: [String]) {
+        if cycleUsesOption {
+            NSLog("Perch: ⌃Tab was already registered by another app; using ⌥Tab for the app cycle")
+            Notify.show("⌃Tab was taken — using ⌥Tab to cycle apps",
+                        symbol: "keyboard", for: 4)
+        }
+
+        guard !taken.isEmpty else { return }
+        let list = taken.joined(separator: ", ")
+        NSLog("Perch: these hotkeys are owned by another app and will not fire: \(list)")
+        Notify.show("\(list) \(taken.count == 1 ? "is" : "are") taken by another app",
+                    symbol: "keyboard", for: 4)
     }
 
     /// The apps marked for Ctrl+Tab, or nil when none are.
