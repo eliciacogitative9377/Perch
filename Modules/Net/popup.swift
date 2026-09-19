@@ -253,8 +253,13 @@ internal class Popup: PopupWrapper {
         view.orientation = .vertical
         view.spacing = 0
         
+        // "Usage", not "Interface". This section carries session totals, link
+        // and internet status, latency and jitter; the section below it is the
+        // interface itself. Both were titled Interface, so the popup showed the
+        // same heading twice with "Status: UP" under each -- and the reset
+        // button up here looked like it would reset the interface.
         view.addArrangedSubview(SeparatorView(
-            label: localizedString("Interface"),
+            label: localizedString("Usage"),
             button: PopupButton(toolTip: localizedString("Reset"), icon: "arrow.clockwise") { [weak self] in
                 self?.resetTotalNetworkUsage()
             }

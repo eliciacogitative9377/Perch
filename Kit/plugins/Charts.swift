@@ -210,6 +210,11 @@ public class LineChartView: ChartView {
     private var transparent: Bool = true
     private var flipY: Bool = false
     private var minMax: Bool = false
+    /// Prefixed to the min/max label. The network chart stacks two of these
+    /// mirrored, so without it the popup shows two bare numbers in one axis --
+    /// "6 KB/s" above "22 KB/s" -- which reads as a broken scale rather than
+    /// as one peak per direction.
+    private var minMaxPrefix: String = ""
     private var color: NSColor
     private var suffix: String
     private var toolTipFunc: ((DoubleValue) -> String)?
@@ -404,6 +409,9 @@ public class LineChartView: ChartView {
             let flatList = originalPoints.map{ $0?.value ?? 0 }
             if let value = flatList.max() {
                 str = toolTipFunc != nil ? toolTipFunc!(DoubleValue(value)) : "\(Int(value.rounded(toPlaces: 2) * 100))\(suffix)"
+            }
+            if !str.isEmpty {
+                str = self.read { self.minMaxPrefix } + str
             }
             let textWidth = str.widthOfString(usingFont: stringAttributes[NSAttributedString.Key.font] as! NSFont)
             let y = flipY ? xLegendHeight + 1 : height + xLegendHeight - 9
@@ -709,6 +717,12 @@ public class LineChartView: ChartView {
         self.displayIfVisible()
     }
     
+    public func setMinMaxPrefix(_ newValue: String) {
+        guard self.read({ self.minMaxPrefix }) != newValue else { return }
+        self.write { self.minMaxPrefix = newValue }
+        self.displayIfVisible()
+    }
+    
     public func setToolTipFunc(_ newValue: ((DoubleValue) -> String)?) {
         self.write { self.toolTipFunc = newValue }
     }
@@ -795,6 +809,10 @@ public class NetworkChartView: ChartView {
         super.init(frame: frame, queueLabel: "com.sagar.perch.Charts.Network")
         
         self.inChart.setMinMax(minMax)
+        // Which peak belongs to which direction, since the two halves have
+        // independent scales.
+        self.inChart.setMinMaxPrefix("\u{2193} ")
+        self.outChart.setMinMaxPrefix("\u{2191} ")
         self.outChart.setMinMax(minMax)
         
         self.inChart.setFlipY(!self.reversedOrder)

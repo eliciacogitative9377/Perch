@@ -92,6 +92,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
         // minimize/restore key and the trackpad gesture. It shares nothing
         // with the module system above.
         Launcher.shared.start()
+
+        self.openPopupIfRequested()
         
         NotificationCenter.default.addObserver(self, selector: #selector(listenForAppPause), name: .pause, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(handleToggleSettings), name: .toggleSettings, object: nil)
@@ -111,6 +113,45 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
         self.startTS = Date()
     }
     
+    /// `--popup <Module> [seconds]` opens one module's popup shortly after
+    /// launch, at the top right of the screen.
+    ///
+    /// This exists so the README plates can be regenerated without a mouse.
+    /// Opening a popup otherwise means clicking a menu bar item, which needs
+    /// UI-scripting permission that a terminal or a CI runner does not have --
+    /// and a screenshot nobody can reproduce goes stale the first time the UI
+    /// changes. The delay is there because a popup opened before its reader
+    /// has sampled anything shows dashes.
+    private func openPopupIfRequested() {
+        let args = CommandLine.arguments
+        guard let index = args.firstIndex(of: "--popup"),
+              args.indices.contains(index + 1) else { return }
+
+        let wanted = args[index + 1]
+        let delay = args.indices.contains(index + 2) ? (Double(args[index + 2]) ?? 6) : 6
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+            // "search" is not a module; it is the launcher's own panel, and it
+            // belongs in the same plate as the popups.
+            if wanted.lowercased() == "search" {
+                Launcher.shared.showSearch()
+                return
+            }
+            guard let module = modules.first(where: {
+                $0.config.name.lowercased() == wanted.lowercased()
+            }) else {
+                error("--popup: no module named \(wanted)")
+                return
+            }
+            let screen = NSScreen.main?.visibleFrame ?? .zero
+            NotificationCenter.default.post(name: .togglePopup, object: nil, userInfo: [
+                "module": module.config.name,
+                "origin": CGPoint(x: screen.maxX - 40, y: screen.maxY),
+                "center": CGFloat(0)
+            ])
+        }
+    }
+
     func applicationWillTerminate(_ aNotification: Notification) {
         modules.forEach{ $0.terminate() }
         SystemStats.shared.terminate()

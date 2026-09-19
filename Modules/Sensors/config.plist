@@ -2,16 +2,44 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>Name</key>
-	<string>Sensors</string>
-	<key>State</key>
-	<false/>
-	<key>Symbol</key>
-	<string>fanblades.fill</string>
 	<key>AlternativeSymbol</key>
 	<string>thermometer.sun</string>
+	<key>Name</key>
+	<string>Sensors</string>
+	<key>Settings</key>
+	<dict>
+		<key>notifications</key>
+		<true/>
+		<key>popup</key>
+		<true/>
+	</dict>
+	<key>State</key>
+	<true/>
+	<key>Symbol</key>
+	<string>fanblades.fill</string>
 	<key>Widgets</key>
 	<dict>
+		<key>bar_chart</key>
+		<dict>
+			<key>Default</key>
+			<false/>
+			<key>Order</key>
+			<integer>3</integer>
+			<key>Preview</key>
+			<dict>
+				<key>Color</key>
+				<true/>
+				<key>Value</key>
+				<string>0.36,0.3</string>
+			</dict>
+			<key>Title</key>
+			<string>FAN</string>
+			<key>Unsupported colors</key>
+			<array>
+				<string>pressure</string>
+				<string>cluster</string>
+			</array>
+		</dict>
 		<key>label</key>
 		<dict>
 			<key>Default</key>
@@ -23,60 +51,32 @@
 		<dict>
 			<key>Default</key>
 			<true/>
-			<key>Title</key>
-			<string>Sensor</string>
+			<key>Order</key>
+			<integer>1</integer>
 			<key>Preview</key>
 			<dict>
 				<key>Value</key>
 				<string>0.12</string>
 			</dict>
+			<key>Title</key>
+			<string>Sensor</string>
 			<key>Unsupported colors</key>
 			<array>
 				<string>pressure</string>
 			</array>
-			<key>Order</key>
-			<integer>1</integer>
 		</dict>
 		<key>sensors</key>
 		<dict>
 			<key>Default</key>
 			<true/>
+			<key>Order</key>
+			<integer>2</integer>
 			<key>Preview</key>
 			<dict>
 				<key>Values</key>
 				<string>38°,41°</string>
 			</dict>
-			<key>Order</key>
-			<integer>2</integer>
 		</dict>
-		<key>bar_chart</key>
-		<dict>
-			<key>Default</key>
-			<false/>
-			<key>Title</key>
-			<string>FAN</string>
-			<key>Preview</key>
-			<dict>
-				<key>Value</key>
-				<string>0.36,0.3</string>
-				<key>Color</key>
-				<true/>
-			</dict>
-			<key>Unsupported colors</key>
-			<array>
-				<string>pressure</string>
-				<string>cluster</string>
-			</array>
-			<key>Order</key>
-			<integer>3</integer>
-		</dict>
-	</dict>
-	<key>Settings</key>
-	<dict>
-		<key>popup</key>
-		<true/>
-		<key>notifications</key>
-		<true/>
 	</dict>
 </dict>
 </plist>

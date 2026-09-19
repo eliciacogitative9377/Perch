@@ -19,9 +19,9 @@ internal class Popup: PopupWrapper {
     
     private let loadCache = PopupCache<GPU_Info>()
     
-    private var usageCircle: PieChartView? = nil
-    private var renderCircle: PieChartView? = nil
-    private var tilerCircle: PieChartView? = nil
+    private var usageTile: StatTileView? = nil
+    private var renderTile: StatTileView? = nil
+    private var tilerTile: StatTileView? = nil
     
     private var chart: LineChartView? = nil
     private var lineChartHistory: Int = 180
@@ -71,33 +71,44 @@ internal class Popup: PopupWrapper {
     }
     
     private func initDashboard() -> NSView {
-        let view: NSView = NSView(frame: NSRect(x: 0, y: 0, width: self.frame.width, height: self.dashboardHeight))
-        view.heightAnchor.constraint(equalToConstant: view.bounds.height).isActive = true
-        
-        let usageSize = self.dashboardHeight-20
-        let usageX = (view.frame.width - usageSize)/2
-        
-        let usage = NSView(frame: NSRect(x: usageX, y: (view.frame.height - usageSize)/2, width: usageSize, height: usageSize))
-        let render = NSView(frame: NSRect(x: (usageX - 50)/2, y: (view.frame.height - 50)/2 - 3, width: 50, height: 50))
-        let tiler = NSView(frame: NSRect(x: (usageX+usageSize) + (usageX - 50)/2, y: 0, width: 50, height: self.dashboardHeight))
-        
-        self.usageCircle = PieChartView(frame: NSRect(x: 0, y: 0, width: usage.frame.width, height: usage.frame.height), drawValue: true)
-        self.usageCircle!.toolTip = localizedString("Utilization")
-        usage.addSubview(self.usageCircle!)
-        
-        self.renderCircle = PieChartView(frame: NSRect(x: 0, y: 0, width: render.frame.width, height: render.frame.height), drawValue: true)
-        self.renderCircle!.toolTip = localizedString("Render utilization")
-        render.addSubview(self.renderCircle!)
-        
-        self.tilerCircle = PieChartView(frame: NSRect(x: 0, y: 0, width: tiler.frame.width, height: tiler.frame.height), drawValue: true)
-        self.tilerCircle!.toolTip = localizedString("Tiler utilization")
-        tiler.addSubview(self.tilerCircle!)
-        
-        view.addSubview(render)
-        view.addSubview(usage)
-        view.addSubview(tiler)
-        
-        return view
+        // Tiles, matching CPU and memory. Three arcs read by angle said the
+        // same thing three times in a form nobody can measure by eye; the
+        // figures carry it, and the meters make them comparable.
+        let container = NSView(frame: NSRect(x: 0, y: 0, width: self.frame.width, height: self.dashboardHeight))
+        container.heightAnchor.constraint(equalToConstant: self.dashboardHeight).isActive = true
+
+        let row = NSStackView(frame: container.bounds)
+        row.translatesAutoresizingMaskIntoConstraints = false
+        row.orientation = .horizontal
+        row.distribution = .fillEqually
+        row.spacing = Constants.Popup.spacing
+        row.edgeInsets = NSEdgeInsets(top: 8, left: 0, bottom: 4, right: 0)
+
+        let usage = StatTileView(caption: localizedString("GPU utilization"))
+        usage.toolTip = localizedString("GPU utilization")
+        self.usageTile = usage
+
+        let render = StatTileView(caption: localizedString("Render utilization"))
+        render.toolTip = localizedString("Render utilization")
+        self.renderTile = render
+
+        let tiler = StatTileView(caption: localizedString("Tiler utilization"))
+        tiler.toolTip = localizedString("Tiler utilization")
+        self.tilerTile = tiler
+
+        row.addArrangedSubview(usage)
+        row.addArrangedSubview(render)
+        row.addArrangedSubview(tiler)
+
+        container.addSubview(row)
+        NSLayoutConstraint.activate([
+            row.leadingAnchor.constraint(equalTo: container.leadingAnchor),
+            row.trailingAnchor.constraint(equalTo: container.trailingAnchor),
+            row.topAnchor.constraint(equalTo: container.topAnchor),
+            row.bottomAnchor.constraint(equalTo: container.bottomAnchor)
+        ])
+
+        return container
     }
     
     private func initChart() -> NSView  {
@@ -157,21 +168,24 @@ internal class Popup: PopupWrapper {
         }
         
         if let utilization = value.utilization {
-            self.usageCircle?.toolTip = "\(localizedString("GPU utilization")): \(Int(utilization.rounded(toPlaces: 2) * 100))%"
-            self.usageCircle?.setValue(utilization)
-            self.usageCircle?.display()
+            self.usageTile?.set(value: "\(Int(utilization.rounded(toPlaces: 2) * 100))%",
+                              fraction: utilization,
+                              color: utilization.usageColor())
+            self.usageTile?.toolTip = "\(localizedString("GPU utilization")): \(Int(utilization.rounded(toPlaces: 2) * 100))%"
             self.utilizationField?.stringValue = "\(Int(utilization*100))%"
         }
         if let utilization = value.renderUtilization {
-            self.renderCircle?.toolTip = "\(localizedString("Render utilization")): \(Int(utilization.rounded(toPlaces: 2) * 100))%"
-            self.renderCircle?.setValue(utilization)
-            self.renderCircle?.display()
+            self.renderTile?.set(value: "\(Int(utilization.rounded(toPlaces: 2) * 100))%",
+                              fraction: utilization,
+                              color: utilization.usageColor())
+            self.renderTile?.toolTip = "\(localizedString("Render utilization")): \(Int(utilization.rounded(toPlaces: 2) * 100))%"
             self.renderField?.stringValue = "\(Int(utilization*100))%"
         }
         if let utilization = value.tilerUtilization {
-            self.tilerCircle?.toolTip = "\(localizedString("Tiler utilization")): \(Int(utilization.rounded(toPlaces: 2) * 100))%"
-            self.tilerCircle?.setValue(utilization)
-            self.tilerCircle?.display()
+            self.tilerTile?.set(value: "\(Int(utilization.rounded(toPlaces: 2) * 100))%",
+                              fraction: utilization,
+                              color: utilization.usageColor())
+            self.tilerTile?.toolTip = "\(localizedString("Tiler utilization")): \(Int(utilization.rounded(toPlaces: 2) * 100))%"
             self.tilerField?.stringValue = "\(Int(utilization*100))%"
         }
         if let utilization = value.aneUtilization {

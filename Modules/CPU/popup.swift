@@ -207,8 +207,20 @@ internal class Popup: PopupWrapper {
     }
     
     private func initDashboard() -> NSView {
-        let view = NSStackView(frame: NSRect(x: 0, y: 0, width: self.frame.width, height: self.dashboardHeight))
-        view.heightAnchor.constraint(equalToConstant: view.bounds.height).isActive = true
+        // A plain NSView wrapper around the row, deliberately.
+        //
+        // recalculateHeight() has a special case for NSStackView children: it
+        // sums *their* arranged subviews' bounds instead of the view's own
+        // height. The tiles inside are laid out by constraints, so their bounds
+        // are zero until the first layout pass -- returning the stack directly
+        // made the dashboard count as 0 instead of 90, the popup came out 90pt
+        // short, and the stack broke a section's height constraint to fit.
+        // That is what printed Average load over Top processes.
+        let container = NSView(frame: NSRect(x: 0, y: 0, width: self.frame.width, height: self.dashboardHeight))
+        container.heightAnchor.constraint(equalToConstant: self.dashboardHeight).isActive = true
+
+        let view = NSStackView(frame: container.bounds)
+        view.translatesAutoresizingMaskIntoConstraints = false
         view.orientation = .horizontal
         view.distribution = .fillEqually
         view.spacing = Constants.Popup.spacing
@@ -234,7 +246,15 @@ internal class Popup: PopupWrapper {
         view.addArrangedSubview(usage)
         view.addArrangedSubview(frequency)
 
-        return view
+        container.addSubview(view)
+        NSLayoutConstraint.activate([
+            view.leadingAnchor.constraint(equalTo: container.leadingAnchor),
+            view.trailingAnchor.constraint(equalTo: container.trailingAnchor),
+            view.topAnchor.constraint(equalTo: container.topAnchor),
+            view.bottomAnchor.constraint(equalTo: container.bottomAnchor)
+        ])
+
+        return container
     }
 
     private func initChart() -> NSView {

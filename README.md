@@ -17,7 +17,11 @@
 </p>
 
 <p align="center">
-  <img src="docs/screenshots/monitor.png" width="820" alt="Perch: the Network and Memory popups, and the Ctrl+Space app search">
+  <img src="docs/screenshots/menubar.png" width="300" alt="Perch in the menu bar: GPU, CPU and RAM percentages with network speed">
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/monitor.png" width="860" alt="The CPU, Network, Memory and GPU popups">
 </p>
 
 ---
