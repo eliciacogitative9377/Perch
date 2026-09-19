@@ -12,6 +12,7 @@
 import Cocoa
 import SystemConfiguration
 import Security
+import CryptoKit
 
 public struct version_s {
     public let current: String
@@ -139,7 +140,12 @@ public class Updater {
         task.resume()
     }
     
+    /// The release asset this download came from, so install() can fetch the
+    /// checksum GitHub publishes beside it.
+    private var lastDownloadURL: URL?
+    
     public func download(_ url: URL, progress: @escaping (_ progress: Progress) -> Void = {_ in }, completion: @escaping (_ path: String) -> Void = {_ in }) {
+        self.lastDownloadURL = url
         let downloadTask = URLSession.shared.downloadTask(with: url) { urlOrNil, _, _ in
             guard let fileURL = urlOrNil else { return }
             do {
@@ -184,6 +190,18 @@ public class Updater {
         
         print("Started new version installation...")
         
+        self.verifyChecksum(of: dmg) { error in
+            if let error {
+                try? FileManager.default.removeItem(atPath: dmg)
+                completion("DMG verification failed: \(error)")
+                return
+            }
+            print("DMG checksum matches the published release")
+            self.mountAndInstall(dmg: dmg, pwd: pwd, needsElevation: needsElevation, completion: completion)
+        }
+    }
+    
+    private func mountAndInstall(dmg: String, pwd: String, needsElevation: Bool, completion: @escaping (_ error: String?) -> Void) {
         let mountPoint: String
         do {
             mountPoint = try self.makeUniqueMountPoint()
@@ -298,8 +316,17 @@ public class Updater {
         guard SecCodeCopyStaticCode(selfCode, [], &selfStatic) == errSecSuccess, let selfStatic else {
             return "SecCodeCopyStaticCode failed"
         }
+        // A team identifier only exists when the app is signed with a
+        // Developer ID. This build is signed ad hoc, so there is nothing to
+        // compare and every update failed here with "could not read current
+        // team ID" -- the check could never pass, for anyone.
+        //
+        // Dropping it outright would leave the update unverified, so integrity
+        // moves to the SHA-256 that CI publishes beside the DMG (see
+        // verifyChecksum). What stays here either way is the validity check
+        // above: the downloaded app must carry an intact signature.
         guard let selfTeam = self.teamID(for: selfStatic) else {
-            return "could not read current team ID"
+            return nil
         }
         guard let dmgTeam = self.teamID(for: code) else {
             return "could not read DMG team ID"
@@ -308,6 +335,57 @@ public class Updater {
             return "team ID mismatch: \(selfTeam) vs \(dmgTeam)"
         }
         return nil
+    }
+    
+    /// Compares the downloaded DMG against the SHA-256 published beside it.
+    ///
+    /// The release workflow uploads Perch.dmg.sha256 next to every Perch.dmg,
+    /// so the expected digest arrives from GitHub over TLS while the file
+    /// itself is checked byte for byte. For an ad-hoc signed build this is the
+    /// integrity guarantee -- without it, "update" would mean "run whatever
+    /// that URL served".
+    ///
+    /// Fails closed: no checksum published, or no answer, means no install.
+    private func verifyChecksum(of dmg: String, completion: @escaping (_ error: String?) -> Void) {
+        guard let source = self.lastDownloadURL,
+              let url = URL(string: source.absoluteString + ".sha256") else {
+            completion("no download URL to check against")
+            return
+        }
+        
+        URLSession.shared.dataTask(with: url) { data, response, _ in
+            guard let data,
+                  let code = (response as? HTTPURLResponse)?.statusCode, code == 200,
+                  let text = String(data: data, encoding: .utf8),
+                  let expected = text.split(separator: " ").first.map(String.init)?.lowercased(),
+                  expected.count == 64 else {
+                completion("could not fetch the published checksum")
+                return
+            }
+            guard let actual = self.sha256(ofFileAt: dmg) else {
+                completion("could not hash the downloaded DMG")
+                return
+            }
+            if actual != expected {
+                completion("checksum mismatch: the download does not match the published release")
+                return
+            }
+            completion(nil)
+        }.resume()
+    }
+    
+    private func sha256(ofFileAt path: String) -> String? {
+        guard let handle = FileHandle(forReadingAtPath: path) else { return nil }
+        defer { try? handle.close() }
+        
+        var hasher = SHA256()
+        // A megabyte at a time: the DMG is small today, and a future one should
+        // not have to fit in memory to be verified.
+        while true {
+            guard let chunk = try? handle.read(upToCount: 1024 * 1024), !chunk.isEmpty else { break }
+            hasher.update(data: chunk)
+        }
+        return hasher.finalize().map { String(format: "%02x", $0) }.joined()
     }
     
     private func teamID(for code: SecStaticCode) -> String? {
