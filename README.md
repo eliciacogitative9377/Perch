@@ -260,10 +260,23 @@ privilege from moving windows:
 
 ### No CPU temperature in the menu bar
 
-The **Sensors** module carries it. Open Perch's settings and check that Sensors
-is switched on in the sidebar — a Mac where it was turned off stays off, since
-that is a saved preference. New installs enable it, pick a CPU temperature
-sensor automatically, and prefer one that is actually reporting a reading.
+Three things to check, in order:
+
+1. **Is the Sensors module on?** Open Perch's settings and look at the sidebar.
+   A Mac where it was switched off stays off — that is a saved preference. New
+   installs enable it, pick a CPU temperature sensor automatically, and prefer
+   one that is actually reporting.
+2. **Is your menu bar full?** If you see a `«` near the left of the status
+   items, macOS is hiding the ones that do not fit, newest first — so Perch's
+   temperature can be running and invisible. Quit a menu bar app, or ⌘-drag
+   items to reorder, and it appears. This is macOS, not Perch.
+3. **Does this Mac report one at all?** Open the Sensors popup: if it lists
+   *Average CPU* and *Hottest CPU*, the readings exist and the problem is one of
+   the two above.
+
+The sensor Perch picks by default is **Average CPU**, which the app computes
+from whichever keys your Mac actually reports — so it works the same on M1
+through M5 and on Intel, rather than depending on a per-generation key.
 
 ---
 

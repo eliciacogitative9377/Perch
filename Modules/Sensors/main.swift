@@ -195,16 +195,40 @@ public class Sensors: Module {
             return
         }
 
-        // Prefer one that is actually reporting a reading: a key can be present
-        // and read zero, and enabling that shows an empty slot in the menu bar.
-        // Averaged die readings beat a single core; Intel falls back to
-        // proximity, which is all it exposes.
+        // "Average CPU" first, because it is the only choice that means the
+        // same thing on every Mac.
+        //
+        // The per-core keys are generation-specific -- Tp01 on M1, M2 and M4,
+        // Te05/Tf04 on M3, Tp00 on M5, TC0P on Intel -- so picking one of them
+        // ties the default to the machine it was chosen on. The reader derives
+        // "Average CPU" from whichever of those keys the Mac in hand actually
+        // reports, so it is present on all of them and needs no table.
+        //
+        // Failing that, prefer a sensor that is genuinely reporting: a key can
+        // exist and read zero, and enabling that one puts an empty slot in the
+        // menu bar. Averaged die readings beat a single core; Intel falls back
+        // to proximity, which is all it exposes.
         let reporting = candidates.filter { $0.value > 0 }
-        let sensor = reporting.first(where: { $0.average }) ?? reporting.first
+        let sensor = reporting.first(where: { $0.key == "Average CPU" })
+            ?? reporting.first(where: { $0.average }) ?? reporting.first
+            ?? candidates.first(where: { $0.key == "Average CPU" })
             ?? candidates.first(where: { $0.average }) ?? candidates[0]
 
         Store.shared.set(key: flag, value: true)
         Store.shared.set(key: "sensor_\(sensor.key)", value: true)
+
+        // The mini widget does not read the flags above; it shows one sensor
+        // chosen by its own key, and that key defaults to "Average System
+        // Total" -- a power reading many Macs do not expose. So the widget
+        // looked for a sensor that was not there and drew nothing, which is
+        // the other half of "no temperature in the menu bar". Point it at the
+        // same sensor, unless a choice has already been made.
+        let miniKey = "\(ModuleType.sensors.stringValue)_sensor"
+        if !Store.shared.exist(key: miniKey) {
+            Store.shared.set(key: miniKey, value: sensor.key)
+            self.selectedSensor = sensor.key
+        }
+
         debug("Sensors: enabled \(sensor.key) (\(sensor.name)) in the menu bar by default")
     }
 
