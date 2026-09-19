@@ -16,6 +16,10 @@
   <img src="https://img.shields.io/badge/No%20Telemetry-✓-brightgreen?style=flat-square" alt="No Telemetry">
 </p>
 
+<p align="center">
+  <img src="docs/screenshots/monitor.png" width="820" alt="Perch: the Network and Memory popups, and the Ctrl+Space app search">
+</p>
+
 ---
 
 ## What is Perch?
@@ -47,6 +51,10 @@ No Dock clutter. No separate apps. Just one **`Apps ▾`** item in the menu bar.
 - **Per-app hotkeys** — assign `⌃1` … `⌃9` shortcuts to jump to specific apps instantly.
 - **`⌃Tab` app cycle** — walks through recently used apps one step at a time (can be turned off if it conflicts with your browser/terminal).
 - **`⌃\`` toggle** — minimises the frontmost app; press again to restore it.
+
+<p align="center">
+  <img src="docs/screenshots/launcher.png" width="320" alt="The Ctrl+Space search panel listing running apps">
+</p>
 
 ### System Monitor
 Live readings drawn as compact widgets in the menu bar itself:

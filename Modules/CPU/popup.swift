@@ -382,6 +382,11 @@ internal class Popup: PopupWrapper {
         }
         
         let view: NSView = NSView(frame: NSRect(x: 0, y: 0, width: self.frame.width, height: self.processesHeight))
+        // Every other section in this popup pins its height; this one did not,
+        // and its children are positioned by frame rather than by constraints,
+        // so it had no intrinsic size to fall back on. The stack view gave it
+        // zero height and the process rows drew straight over Average load.
+        view.heightAnchor.constraint(equalToConstant: view.bounds.height).isActive = true
         let separator = separatorView(localizedString("Top processes"), origin: NSPoint(x: 0, y: self.processesHeight-Constants.Popup.separatorHeight), width: self.frame.width)
         let container: ProcessesView = ProcessesView(
             frame: NSRect(x: 0, y: 0, width: self.frame.width, height: separator.frame.origin.y),
