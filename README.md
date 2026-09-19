@@ -214,6 +214,59 @@ mismatched release could never be offered.
 
 ---
 
+## Troubleshooting
+
+### A hotkey does nothing
+
+There is no "hotkey permission" in macOS, and nothing in System Settings grants
+one — Perch registers its keys through Carbon, which needs no privilege at all.
+When a key does nothing, it is almost always owned by something else: a global
+hotkey belongs to whichever app registered it **first**, and the loser is told
+nothing.
+
+- **`⌃Tab`** — browsers, terminals and window managers all want this key. Perch
+  now notices the collision, moves the app cycle to **`⌥Tab`**, and says so on
+  launch.
+- **Everything else** — if `⌃Space` or `` ⌃` `` are taken, Perch names them in a
+  notice at launch. Quit whatever owns them, or turn Perch's off in Settings.
+- **macOS itself** — check **System Settings → Keyboard → Keyboard Shortcuts…**
+  for a system shortcut using the same combination.
+
+### The hotkey fires, but the window does not move
+
+That is **Accessibility**, which is a real permission and the only one Perch
+needs to raise, minimise and restore windows:
+
+**System Settings → Privacy & Security → Accessibility** → turn **Perch** on.
+
+### It worked before an update, and stopped
+
+macOS ties the Accessibility grant to the app's code signature. Perch is signed
+ad hoc rather than with a paid Developer ID, so the signature changes with every
+build — after an update the switch still *looks* on while the grant no longer
+applies. Remove and re-add it:
+
+1. **System Settings → Privacy & Security → Accessibility**
+2. Select **Perch**, click **−**
+3. Click **+**, choose `/Applications/Perch.app`, leave it switched **on**
+4. Quit and reopen Perch
+
+### The trackpad gesture does not open the search
+
+That one needs **Input Monitoring**, because reading raw touches is a different
+privilege from moving windows:
+
+**System Settings → Privacy & Security → Input Monitoring** → turn **Perch** on.
+
+### No CPU temperature in the menu bar
+
+The **Sensors** module carries it. Open Perch's settings and check that Sensors
+is switched on in the sidebar — a Mac where it was turned off stays off, since
+that is a saved preference. New installs enable it, pick a CPU temperature
+sensor automatically, and prefer one that is actually reporting a reading.
+
+---
+
 ## Requirements
 
 - **macOS 14 Sonoma** or newer — the settings window uses `NavigationSplitView`, and the bundled widget extension requires 14
