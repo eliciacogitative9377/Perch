@@ -14,7 +14,11 @@ concurrency:
 
 jobs:
   build:
-    runs-on: macos-15
+    # macos-26, not macos-15: the app calls NSGlassEffectView, which only
+    # exists in the macOS 26 SDK. An older image fails at compile time, not at
+    # runtime, so this cannot fall back to an older runner without dropping the
+    # glass -- see Kit/module/popup.swift.
+    runs-on: macos-26
 
     steps:
       - uses: actions/checkout@v4
