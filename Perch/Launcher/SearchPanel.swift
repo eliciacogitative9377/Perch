@@ -36,6 +36,8 @@ final class SearchPanel: NSPanel, NSTableViewDataSource, NSTableViewDelegate, NS
     private var onPick: (AppEntry) -> Void = { _ in }
     private var onSetListed: ([AppEntry], Bool) -> Void = { _, _ in }
     private var onEditApps: () -> Void = {}
+    private var isMarked: (String) -> Bool = { _ in false }
+    private var onSetMarked: (AppEntry, Bool) -> Void = { _, _ in }
     /// True while the options menu is running its own event loop, which costs
     /// the panel key status without the user having clicked away.
     private var optionsOpen = false
@@ -70,11 +72,15 @@ final class SearchPanel: NSPanel, NSTableViewDataSource, NSTableViewDelegate, NS
     init(source: @escaping () -> [AppEntry],
          onPick: @escaping (AppEntry) -> Void,
          onSetListed: @escaping ([AppEntry], Bool) -> Void,
-         onEditApps: @escaping () -> Void) {
+         onEditApps: @escaping () -> Void,
+         isMarked: @escaping (String) -> Bool,
+         onSetMarked: @escaping (AppEntry, Bool) -> Void) {
         self.source = source
         self.onPick = onPick
         self.onSetListed = onSetListed
         self.onEditApps = onEditApps
+        self.isMarked = isMarked
+        self.onSetMarked = onSetMarked
         super.init(contentRect: NSRect(x: 0, y: 0, width: 620, height: fieldHeight),
                    // NOT .nonactivatingPanel: that tells macOS to keep the
                    // app inactive, so the panel cannot hold key focus and
@@ -536,7 +542,7 @@ final class SearchPanel: NSPanel, NSTableViewDataSource, NSTableViewDelegate, NS
         func quitItem(_ app: NSRunningApplication) -> ActionItem {
             ActionItem("Quit \(row.name)") { [weak self] in
                 WindowControl.quit(app)
-                Notify.show("Quit \(row.name)")
+                Notify.show("Quit \(row.name)", symbol: "xmark.circle.fill")
                 self?.refresh(after: 0.6)
             }
         }
@@ -597,6 +603,17 @@ final class SearchPanel: NSPanel, NSTableViewDataSource, NSTableViewDelegate, NS
                 menu.addItem(quitItem(running))
             }
         }
+
+        menu.addItem(.separator())
+        // The custom switcher: Ctrl+Tab walks only the marked apps.
+        let marked = isMarked(row.bundleID)
+        let markItem = ActionItem(marked ? "Remove from ⌃Tab Switcher" : "Add to ⌃Tab Switcher") {
+            [weak self] in
+            self?.onSetMarked(entry, !marked)
+            self?.refresh()
+        }
+        markItem.state = marked ? .on : .off
+        menu.addItem(markItem)
 
         menu.addItem(.separator())
         let listed = source().contains { $0.bundleID == row.bundleID }

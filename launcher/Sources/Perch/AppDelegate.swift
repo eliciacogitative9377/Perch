@@ -44,6 +44,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                                   onPick: { entry in WindowControl.toggle(entry) },
                                   onSetListed: { [weak self] changed, listed in
                                       self?.setListed(changed, listed)
+                                  },
+                                  isMarked: { [weak self] bundleID in
+                                      self?.entries.first { $0.bundleID == bundleID }?.pinned ?? false
+                                  },
+                                  onSetMarked: { [weak self] entry, marked in
+                                      self?.setMarked(entry, marked)
                                   })
 
         // One key: Ctrl+Space opens the search.  Where it appears is a
@@ -63,8 +69,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         warmTimer?.tolerance = 0.5
 
         if Prefs.cycleHotkeyEnabled {
-            cycleHotkey = Hotkey(keyCode: Hotkey.Key.tab, modifiers: .control) {
-                Recents.shared.cycleToNext()
+            cycleHotkey = Hotkey(keyCode: Hotkey.Key.tab, modifiers: .control) { [weak self] in
+                Recents.shared.cycleToNext(among: self?.markedBundleIDs)
             }
         }
 
@@ -88,7 +94,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         if !WindowControl.isTrusted {
             WindowControl.requestAccessibility()
-            Notify.show("Perch needs Accessibility to move windows", for: 3)
+            Notify.show("Perch needs Accessibility to move windows", symbol: "hand.raised.fill", for: 3)
         }
     }
 
@@ -296,6 +302,30 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         searchPanel?.show()
     }
 
+    /// The apps marked for Ctrl+Tab, or nil when none are. Marking is the
+    /// switch: mark a few apps and Ctrl+Tab walks only those; mark nothing and
+    /// it falls back to recents, so the key never does nothing.
+    private var markedBundleIDs: Set<String>? {
+        let marked = Set(entries.filter { $0.pinned }.map { $0.bundleID })
+        return marked.isEmpty ? nil : marked
+    }
+
+    private func setMarked(_ entry: AppEntry, _ marked: Bool) {
+        guard let index = entries.firstIndex(where: { $0.bundleID == entry.bundleID }) else {
+            var added = entry
+            added.pinned = marked
+            entries.append(added)
+            Config.save(entries)
+            Notify.show(marked ? "Added and marked \(entry.name)" : "Added \(entry.name)",
+                        symbol: "plus.circle.fill")
+            return
+        }
+        entries[index].pinned = marked
+        Config.save(entries)
+        Notify.show(marked ? "\(entry.name) joins ⌃Tab" : "\(entry.name) left ⌃Tab",
+                    symbol: marked ? "arrow.left.arrow.right" : "minus.circle")
+    }
+
     @objc private func addFrontmost() {
         guard let front = NSWorkspace.shared.frontmostApplication,
               let bundleID = front.bundleIdentifier else { return }
@@ -325,7 +355,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         Config.save(entries)
         registerAppHotkeys()
         let what = touched.count == 1 ? touched[0] : "\(touched.count) apps"
-        Notify.show(listed ? "Added \(what)" : "Removed \(what)")
+        Notify.show(listed ? "Added \(what)" : "Removed \(what)",
+                    symbol: listed ? "plus.circle.fill" : "minus.circle.fill")
     }
 
     /// Reachable from the menu as well as the search panel, for an app that
@@ -352,7 +383,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     /// put away".
     private func toggleFrontmost() {
         if let last = stashed.popLast() {
-            if !WindowControl.restore(last) { Notify.show("Nothing to restore") }
+            if !WindowControl.restore(last) { Notify.show("Nothing to restore", symbol: "arrow.uturn.backward") }
             return
         }
         if let bundleID = WindowControl.minimizeFrontmost() {

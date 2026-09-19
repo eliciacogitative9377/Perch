@@ -35,7 +35,13 @@ final class Launcher {
                                   onSetListed: { [weak self] changed, listed in
                                       self?.setListed(changed, listed)
                                   },
-                                  onEditApps: { [weak self] in self?.editApps() })
+                                  onEditApps: { [weak self] in self?.editApps() },
+                                  isMarked: { [weak self] bundleID in
+                                      self?.entries.first { $0.bundleID == bundleID }?.pinned ?? false
+                                  },
+                                  onSetMarked: { [weak self] entry, marked in
+                                      self?.setMarked(entry, marked)
+                                  })
 
         searchHotkey = Hotkey(keyCode: Hotkey.Key.space, modifiers: .control) { [weak self] in
             self?.searchPanel?.toggle()
@@ -52,8 +58,8 @@ final class Launcher {
         warmTimer?.tolerance = 0.5
 
         if Prefs.cycleHotkeyEnabled {
-            cycleHotkey = Hotkey(keyCode: Hotkey.Key.tab, modifiers: .control) {
-                Recents.shared.cycleToNext()
+            cycleHotkey = Hotkey(keyCode: Hotkey.Key.tab, modifiers: .control) { [weak self] in
+                Recents.shared.cycleToNext(among: self?.markedBundleIDs)
             }
         }
 
@@ -70,8 +76,37 @@ final class Launcher {
         // Raising a window needs no permission; minimizing one does.
         if !WindowControl.isTrusted {
             WindowControl.requestAccessibility()
-            Notify.show("Perch needs Accessibility to move windows", for: 3)
+            Notify.show("Perch needs Accessibility to move windows", symbol: "hand.raised.fill", for: 3)
         }
+    }
+
+    /// The apps marked for Ctrl+Tab, or nil when none are.
+    ///
+    /// Marking is the whole switch: mark two or three apps and Ctrl+Tab walks
+    /// only those, which is the point -- a cycle through everything recent is
+    /// what Cmd-Tab already does. Mark nothing and it falls back to recents,
+    /// so the key never does nothing.
+    private var markedBundleIDs: Set<String>? {
+        let marked = Set(entries.filter { $0.pinned }.map { $0.bundleID })
+        return marked.isEmpty ? nil : marked
+    }
+
+    /// Flip whether an app is in the Ctrl+Tab cycle.
+    private func setMarked(_ entry: AppEntry, _ marked: Bool) {
+        guard let index = entries.firstIndex(where: { $0.bundleID == entry.bundleID }) else {
+            // Not in the list yet: marking implies adding it, otherwise the
+            // mark would have nowhere to live.
+            var added = entry
+            added.pinned = marked
+            entries.append(added)
+            Config.save(entries)
+            Notify.show(marked ? "Added and marked \(entry.name)" : "Added \(entry.name)")
+            return
+        }
+        entries[index].pinned = marked
+        Config.save(entries)
+        Notify.show(marked ? "\(entry.name) joins ⌃Tab" : "\(entry.name) left ⌃Tab",
+                    symbol: marked ? "arrow.left.arrow.right" : "minus.circle")
     }
 
     func showSearch() {
@@ -119,7 +154,8 @@ final class Launcher {
         Config.save(entries)
         registerAppHotkeys()
         let what = touched.count == 1 ? touched[0] : "\(touched.count) apps"
-        Notify.show(listed ? "Added \(what)" : "Removed \(what)")
+        Notify.show(listed ? "Added \(what)" : "Removed \(what)",
+                    symbol: listed ? "plus.circle.fill" : "minus.circle.fill")
     }
 
     func editApps() {
@@ -145,7 +181,7 @@ final class Launcher {
     /// put away".
     private func toggleFrontmost() {
         if let last = stashed.popLast() {
-            if !WindowControl.restore(last) { Notify.show("Nothing to restore") }
+            if !WindowControl.restore(last) { Notify.show("Nothing to restore", symbol: "arrow.uturn.backward") }
             return
         }
         if let bundleID = WindowControl.minimizeFrontmost() {

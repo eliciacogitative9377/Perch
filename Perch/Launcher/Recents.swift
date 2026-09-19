@@ -95,12 +95,24 @@ final class Recents {
     private var lastCycleAt = Date.distantPast
     private let cycleWindow: TimeInterval = 1.5
 
-    /// Step to the next-most-recent app, Cmd-Tab style.
+    /// Step to the next app in the cycle, Cmd-Tab style.
+    ///
+    /// `among` restricts the cycle to a chosen set of bundle identifiers --
+    /// the marked apps. Order still comes from recency, so within the set it
+    /// behaves like Cmd-Tab: one tap lands on the app you came from.
+    ///
+    /// Passing nil or an empty set cycles the ten most recent apps, which is
+    /// what happens until something is marked. Marking an app is the opt-in;
+    /// there is no separate switch to forget about.
     @discardableResult
-    func cycleToNext() -> NSRunningApplication? {
+    func cycleToNext(among marked: Set<String>? = nil) -> NSRunningApplication? {
         let now = Date()
         if now.timeIntervalSince(lastCycleAt) > cycleWindow || cycleList.isEmpty {
-            cycleList = top(10)
+            if let marked, !marked.isEmpty {
+                cycleList = running(in: marked)
+            } else {
+                cycleList = top(10)
+            }
             cycleIndex = 0
         } else {
             cycleIndex += 1
@@ -111,6 +123,20 @@ final class Recents {
         let app = cycleList[cycleIndex % cycleList.count]
         WindowControl.toggleActivateOnly(app)
         return app
+    }
+
+    /// The marked apps that are actually running, most recently used first.
+    ///
+    /// Marked-but-not-running apps are left out on purpose: Ctrl+Tab is for
+    /// switching, and a tap that launches something is a different gesture --
+    /// that is what the per-app Ctrl+digit keys and the search panel are for.
+    private func running(in marked: Set<String>) -> [NSRunningApplication] {
+        NSWorkspace.shared.runningApplications
+            .filter { app in
+                guard let id = app.bundleIdentifier else { return false }
+                return marked.contains(id) && app.activationPolicy == .regular
+            }
+            .sorted { rank(for: $0.bundleIdentifier ?? "") > rank(for: $1.bundleIdentifier ?? "") }
     }
 
     /// Higher is more recent. nil means never seen.

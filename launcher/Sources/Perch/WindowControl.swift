@@ -196,7 +196,7 @@ enum WindowControl {
             // substitute was tried and rejected: Cmd-H tears down the
             // full-screen space, after which the app reports no windows while
             // AXHidden stays false and nothing can bring it back.
-            Notify.show("macOS can't minimize a full-screen window")
+            Notify.show("macOS can't minimize a full-screen window", symbol: "macwindow")
         } else {
             setMinimized(window, true)
         }
@@ -312,7 +312,7 @@ enum WindowControl {
         let axApp = AXUIElementCreateApplication(running.processIdentifier)
         guard let window = targetWindow(of: axApp) else { return }
         if bool(window, "AXFullScreen") {
-            Notify.show("macOS can't minimize a full-screen window")
+            Notify.show("macOS can't minimize a full-screen window", symbol: "macwindow")
             return
         }
         setMinimized(window, true)
@@ -366,7 +366,7 @@ enum WindowControl {
         guard let window = targetWindow(of: axApp) else { return nil }
 
         if bool(window, "AXFullScreen") {
-            Notify.show("macOS can't minimize a full-screen window")
+            Notify.show("macOS can't minimize a full-screen window", symbol: "macwindow")
             return nil
         }
         setMinimized(window, true)
