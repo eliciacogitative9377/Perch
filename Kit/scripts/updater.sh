@@ -30,6 +30,27 @@ launch_app() {
     fi
 }
 
+# The copy being replaced is still running, and still owns every global hotkey
+# the app registered: ⌃Space, ⌃Tab, ⌃` and the per-app keys. Launch the new one
+# alongside it and none of those registrations succeed, leaving an app that
+# looks fine and answers no keyboard shortcut until it is restarted by hand.
+# Quit the old one first, and wait for it to actually go.
+quit_running_app() {
+    /usr/bin/pkill -f "$APP_DST/Contents/MacOS/Perch" >/dev/null 2>&1 || true
+    local waited=0
+    while /usr/bin/pgrep -f "$APP_DST/Contents/MacOS/Perch" >/dev/null 2>&1; do
+        /bin/sleep 0.2
+        waited=$((waited + 1))
+        if [[ "$waited" -ge 25 ]]; then
+            # Five seconds is long enough for a clean exit; past that, insist,
+            # since leaving both alive is the failure this avoids.
+            /usr/bin/pkill -9 -f "$APP_DST/Contents/MacOS/Perch" >/dev/null 2>&1 || true
+            /bin/sleep 0.5
+            break
+        fi
+    done
+}
+
 install_app() {
     local parent staging old
     parent="$(/usr/bin/dirname "$APP_DST")"
@@ -55,6 +76,7 @@ install_app() {
 }
 
 if [[ "$STEP" == "2" ]]; then
+    quit_running_app
     install_app
 
     launch_app "$APP_DST/Contents/MacOS/Perch" --dmg "$DMG_PATH"
@@ -67,6 +89,7 @@ elif [[ "$STEP" == "3" ]]; then
 
     echo "Done"
 else
+    quit_running_app
     install_app
 
     launch_app "$APP_DST/Contents/MacOS/Perch" --dmg-path "$DMG_PATH" --mount-path "$MOUNT_PATH"

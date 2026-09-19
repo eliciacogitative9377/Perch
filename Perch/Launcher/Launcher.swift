@@ -92,7 +92,18 @@ final class Launcher {
             Gesture.shared.start(fingers: Prefs.gestureFingers, taps: Prefs.gestureTaps)
         }
 
-        self.reportHotkeys(taken: taken)
+        // A collision is often momentary rather than permanent: an update
+        // relaunches the app, and for a second the copy being replaced still
+        // owns these keys. Reporting straight away would tell the user their
+        // shortcuts are taken when they are about to be free, so try the
+        // failures once more before saying anything.
+        if taken.isEmpty && !self.cycleUsesOption {
+            self.reportHotkeys(taken: [])
+        } else {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3) { [weak self] in
+                self?.retryHotkeys(taken: taken)
+            }
+        }
 
         // Raising a window needs no permission; minimizing one does.
         if !WindowControl.isTrusted {
@@ -103,6 +114,48 @@ final class Launcher {
 
     /// True when ⌃Tab was already taken and the cycle moved to ⌥Tab.
     private var cycleUsesOption = false
+
+    /// Second attempt at whatever would not register, three seconds later.
+    private func retryHotkeys(taken: [String]) {
+        var stillTaken: [String] = []
+
+        for name in taken {
+            switch name {
+            case "⌃Space":
+                searchHotkey = Hotkey(keyCode: Hotkey.Key.space, modifiers: .control) { [weak self] in
+                    self?.searchPanel?.toggle()
+                }
+                if searchHotkey == nil { stillTaken.append(name) }
+            case "⌃Tab":
+                cycleHotkey = Hotkey(keyCode: Hotkey.Key.tab, modifiers: .control) { [weak self] in
+                    Recents.shared.cycleToNext(among: self?.markedBundleIDs)
+                }
+                if cycleHotkey == nil { stillTaken.append(name) }
+            case "⌃`":
+                minimizeHotkey = Hotkey(keyCode: Hotkey.Key.grave, modifiers: .control) { [weak self] in
+                    self?.toggleFrontmost()
+                }
+                if minimizeHotkey == nil { stillTaken.append(name) }
+            default:
+                stillTaken.append(name)
+            }
+        }
+
+        // The fallback to ⌥Tab was taken under the same momentary collision,
+        // so give ⌃Tab another chance before settling for it.
+        if self.cycleUsesOption,
+           let reclaimed = Hotkey(keyCode: Hotkey.Key.tab, modifiers: .control, action: { [weak self] in
+               Recents.shared.cycleToNext(among: self?.markedBundleIDs)
+           }) {
+            self.cycleHotkey = reclaimed
+            self.cycleUsesOption = false
+        }
+
+        // Per-app keys share the same race, and there is no harm in asking again.
+        self.registerAppHotkeys()
+
+        self.reportHotkeys(taken: stillTaken)
+    }
 
     /// Say which hotkeys another app already owns.
     ///
