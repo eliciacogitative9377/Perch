@@ -309,13 +309,33 @@ Perch/
 
 ---
 
-## Open Source, Not Open Contribution
+## Contributing
 
-Perch is open source under the MIT license — you are free to read it, learn from it, fork it, and build your own version.
+Pull requests are welcome. Perch is MIT licensed — read it, learn from it, fork
+it, and if you improve something, send it back.
 
-It is **not** an open-contribution project. Unsolicited pull requests may be closed without review. If you want to change or add something, please open an issue first. Translations and language fixes are always welcome.
+**Good first contributions:** translations (every string lives in
+`Perch/Supporting Files/*.lproj/Localizable.strings`), a new module or widget,
+sensor keys for Macs I cannot test on, and bug fixes with a note on how to
+reproduce what was broken.
 
-The best ways to support the project: report bugs, improve translations, and propose ideas through issues.
+**Before a large change,** open an issue first — not as a formality, but so you
+do not spend a weekend on something that turns out to conflict with work already
+in progress. Small fixes need no discussion; just send them.
+
+**What helps a PR get merged:**
+
+- One change per pull request. Two unrelated fixes are two PRs.
+- Say what the change does and why in the description. The *why* is the part a
+  reviewer cannot reconstruct from the diff.
+- Keep the surrounding style. SwiftLint runs on every push (`.swiftlint.yml`);
+  if a rule genuinely gets in the way, scope a `swiftlint:disable` and write
+  down the reason rather than reformatting readable code.
+- Build it first: `xcodebuild -project Perch.xcodeproj -scheme Perch build`.
+  CI does the same on macOS 26, and the glass effects need that SDK.
+
+Not sure where to start? Open an issue describing what you would like to change
+and I will point you at the right file.
 
 ---
 
