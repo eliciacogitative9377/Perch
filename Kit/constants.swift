@@ -165,15 +165,20 @@ public enum Branding {
 
     /// Public IP lookup, replacing upstream's own endpoint.
     ///
-    /// ifconfig.co is echoip (https://github.com/mpolden/echoip), MIT and
-    /// self-hostable -- so if you would rather not depend on someone else's
-    /// server at all, run echoip and point these at it. The caller forces the
-    /// address family with curl's -4/-6, which is why one path serves both.
+    /// Answers `{"ip": "...", "country": "SG"}` -- the address and a two-letter
+    /// country code, and nothing else. That is the whole reason it is here
+    /// rather than a richer service: the popup needs an address and a flag, and
+    /// an app that promises no telemetry should not be pulling back a city,
+    /// coordinates and an ISP it has no use for.
     ///
-    /// /json, not /ip: the caller decodes a JSON object and wants the country
-    /// alongside the address, for the flag beside it. Pointing this at /ip
-    /// returned a bare string, the decode failed silently, and the Public IP
-    /// row simply never appeared.
-    public static let publicIPv4 = "https://ifconfig.co/json"
-    public static let publicIPv6 = "https://ifconfig.co/json"
+    /// It replaced ifconfig.co, which was the better citizen on paper -- echoip
+    /// is MIT and self-hostable -- but geolocates from MaxMind's free GeoLite2
+    /// database, and that database is stale for cloud ranges. It reported a
+    /// Singapore address as India while three other providers agreed on SG.
+    /// A flag that is confidently wrong is worse than no flag.
+    ///
+    /// The caller forces the address family with curl's -4/-6, which is why one
+    /// path serves both.
+    public static let publicIPv4 = "https://api.country.is/"
+    public static let publicIPv6 = "https://api.country.is/"
 }

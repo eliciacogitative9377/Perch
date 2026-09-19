@@ -559,16 +559,16 @@ internal class UsageReader: Reader<Network_Usage>, CWEventDelegate {
     private func getPublicIP() {
         guard self.publicIPState else { return }
         
-        // echoip's shape: one address per request (the family is forced with
-        // curl's -4/-6) plus the two-letter country, which is what draws the
-        // flag next to the address.
+        // {"ip": "...", "country": "SG"} -- one address per request, since the
+        // family is already forced with curl's -4/-6, and a two-letter code,
+        // which is what draws the flag next to the address.
         struct Addr_s: Decodable {
             let ip: String?
             let countryCode: String?
             
             enum CodingKeys: String, CodingKey {
                 case ip
-                case countryCode = "country_iso"
+                case countryCode = "country"
             }
         }
         
