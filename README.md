@@ -103,25 +103,44 @@ shortcuts and the Settings window — is listed in the
 
 ### Download
 
-One line, no Gatekeeper prompt:
+One command. Paste it in Terminal:
 
 ```bash
-curl -fsSL https://github.com/sagardn/Perch/releases/latest/download/Perch.dmg -o /tmp/Perch.dmg \
-  && hdiutil attach /tmp/Perch.dmg -nobrowse -quiet \
-  && cp -R /Volumes/Perch/Perch.app /Applications/ \
-  && hdiutil detach /Volumes/Perch -quiet \
-  && xattr -dr com.apple.quarantine /Applications/Perch.app \
-  && open /Applications/Perch.app
+curl -fsSL https://raw.githubusercontent.com/sagardn/Perch/main/Tools/install.sh | bash
 ```
 
-Quarantine is applied by the browser that downloads a file, not by the file
-itself, so fetching the DMG with `curl` sidesteps Gatekeeper completely.
+It downloads the latest release, verifies the disk image, installs to
+`/Applications` and launches it.
 
-Prefer clicking? Grab `Perch.dmg` from the
-[latest release](https://github.com/sagardn/Perch/releases/latest) and drag
-Perch to Applications — then **right-click it and choose Open** the first time.
-Perch is signed ad hoc rather than with a paid Developer ID, so macOS wants
-that one confirmation before it will run a downloaded copy.
+**Why a command and not a double-click?** Perch is signed ad hoc rather than
+with a paid Apple Developer ID ($99/year), so macOS will not open it when it
+arrives through a browser. Quarantine is attached by the program that downloads
+a file, not by the file itself — `curl` does not attach it, so this path never
+meets Gatekeeper.
+
+<details>
+<summary>If you downloaded the DMG with a browser and macOS blocked it</summary>
+
+You will see **“Perch.app” Not Opened — Apple could not verify…**, offering only
+*Move to Trash* and *Done*. Click **Done** — nothing is wrong with the app;
+macOS is telling you it is not notarised.
+
+On **macOS 15 and later**, the old right-click → Open trick no longer works.
+Instead:
+
+1. Drag Perch to **Applications** and try to open it once (you get the dialog above).
+2. Open **System Settings → Privacy & Security**.
+3. Scroll to **Security**. There is now a line saying *“Perch.app” was blocked…*
+   with an **Open Anyway** button.
+4. Click it, authenticate, then open Perch again and choose **Open**.
+
+Or clear the flag on that one app from Terminal:
+
+```bash
+xattr -dr com.apple.quarantine /Applications/Perch.app
+```
+
+</details>
 
 ### Build from Source
 
